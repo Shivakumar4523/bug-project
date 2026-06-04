@@ -120,8 +120,8 @@ export function AppLayout() {
     <Box sx={{ display: "flex", minHeight: "100%" }}>
       <Drawer variant="permanent" sx={{ width: drawerWidth, "& .MuiDrawer-paper": { width: drawerWidth, borderRight: "1px solid #dde3ea" } }}>
         <Box sx={{ px: 2, py: 2.2 }}>
-          <Typography variant="h6">PIRNAV</Typography>
-          <Typography variant="caption" color="text.secondary">software solutions Pvt Ltd</Typography>
+          <Typography variant="h6">PIRNAV Bug Tracking</Typography>
+          <Typography variant="caption" color="text.secondary">Enterprise issue management</Typography>
         </Box>
         <Divider />
         <List dense sx={{ px: 1 }}>
