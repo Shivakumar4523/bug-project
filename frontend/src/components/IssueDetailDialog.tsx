@@ -77,7 +77,10 @@ export function IssueDetailDialog({
               <Chip label={issue.assignee?.name ?? "Unassigned"} />
               <Chip label={issue.project?.name} />
             </Stack>
-            <Typography color="text.secondary">{issue.description || "No description provided."}</Typography>
+            <Box sx={{ bgcolor: "#f5f5f5", p: 2, borderRadius: 1 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: "bold", mb: 1 }}>Description</Typography>
+              <Typography color="text.secondary">{issue.description || "No description provided."}</Typography>
+            </Box>
             {(canUploadIssueAttachments || issue.attachments?.length) && (
               <Box>
                 <Typography variant="subtitle2" sx={{ mb: 1 }}>Screenshots & Attachments</Typography>

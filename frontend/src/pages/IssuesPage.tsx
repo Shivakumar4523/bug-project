@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Chip, Dialog, DialogContent, DialogTitle, IconButton, ListSubheader, Menu, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip } from "@mui/material";
+import { Button, Chip, Dialog, DialogContent, DialogTitle, IconButton, ListSubheader, Menu, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Box } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -122,7 +122,11 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
             return (
               <TableRow key={issue._id}>
                 <TableCell>{issue.issueNumber}</TableCell>
-                <TableCell>{issue.title}</TableCell>
+                <TableCell>
+                  <Tooltip title={issue.description || "No description provided"} arrow>
+                    <Box sx={{ cursor: "pointer", textDecoration: "underline" }}>{issue.title}</Box>
+                  </Tooltip>
+                </TableCell>
                 <TableCell>{issue.project?.name}</TableCell>
                 <TableCell><Chip size="small" label={issue.status} /></TableCell>
                 <TableCell>{issue.priority}</TableCell>
