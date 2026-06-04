@@ -1,4 +1,4 @@
-# PIRNAV Bug Tracking
+# Pirnav Bug Tracking
 
 Production-ready Jira-style bug tracking system with React, TypeScript, Express, MongoDB, JWT auth, file uploads, email hooks, reporting, and Docker deployment.
 
@@ -22,7 +22,7 @@ Open `http://localhost`.
 Default login:
 
 ```text
-Email: any seeded PIRNAV user, or admin@pirnav.com
+Email: any seeded Pirnav user, or admin@pirnav.com
 Password: Pirnav@12345
 ```
 
