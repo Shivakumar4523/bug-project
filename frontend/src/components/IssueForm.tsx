@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { useState } from "react";
 import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
@@ -24,7 +24,7 @@ export function IssueForm({
   const canSetTesterFields = currentUserRole === "Tester";
   const canSetStatusOnly = currentUserRole === "Developer";
   const [screenshots, setScreenshots] = useState<File[]>([]);
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, control } = useForm({
     defaultValues: {
       type: initial?.type ?? "Bug",
       title: initial?.title ?? "",
@@ -36,6 +36,12 @@ export function IssueForm({
       dueDate: initial?.dueDate?.slice(0, 10) ?? ""
     }
   });
+
+  const selectedProjectId = useWatch({ control, name: "project" });
+  const selectedProject = projects.find(p => p._id === selectedProjectId);
+  const projectMembers = selectedProject?.members ?? [];
+  const projectMemberIds = new Set(projectMembers.map(m => m._id ?? m.id));
+  const availableAssignees = users.filter(u => projectMemberIds.has(u._id ?? u.id));
 
   return (
     <Box component="form" onSubmit={handleSubmit((data) => {
@@ -66,7 +72,7 @@ export function IssueForm({
             <TextField label="Description" multiline minRows={4} {...register("description")} />
             <TextField select label="Issue Type" {...register("type")}>{["Bug", "Task", "Story", "Improvement"].map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>
             <TextField select label="Project" {...register("project")}>{projects.map((p) => <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>)}</TextField>
-            <TextField select label="Assignee" {...register("assignee")}><MenuItem value="">Unassigned</MenuItem>{users.map((u) => <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>{u.name}</MenuItem>)}</TextField>
+            <TextField select label="Assignee" {...register("assignee")}><MenuItem value="">Unassigned</MenuItem>{availableAssignees.length > 0 ? availableAssignees.map((u) => <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>{u.name}</MenuItem>) : <MenuItem disabled>No members in this project</MenuItem>}</TextField>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ xs: "stretch", sm: "center" }}>
               <Button component="label" startIcon={<AttachFileIcon />} variant="outlined">
                 Screenshots

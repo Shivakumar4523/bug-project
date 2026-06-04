@@ -3,12 +3,20 @@ import type { FilterQuery, Model, UpdateQuery } from "mongoose";
 export class BaseRepository<T> {
   constructor(private model: Model<T>) {}
 
-  findAll(filter: FilterQuery<T> = {}) {
-    return this.model.find(filter).sort({ updatedAt: -1 });
+  findAll(filter: FilterQuery<T> = {}, populate?: string | string[]) {
+    let query = this.model.find(filter).sort({ updatedAt: -1 });
+    if (populate) {
+      query = query.populate(populate);
+    }
+    return query;
   }
 
-  findById(id: string) {
-    return this.model.findById(id);
+  findById(id: string, populate?: string | string[]) {
+    let query = this.model.findById(id);
+    if (populate) {
+      query = query.populate(populate);
+    }
+    return query;
   }
 
   create(data: Partial<T>) {
