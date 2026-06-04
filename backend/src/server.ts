@@ -12,5 +12,5 @@ const server = http.createServer(app);
 initSocket(server);
 
 server.listen(env.port, () => {
-  console.log(`PIRNAV Bug Tracking API listening on ${env.port}`);
+  console.log(`Pirnav Bug Tracking API listening on ${env.port}`);
 });
