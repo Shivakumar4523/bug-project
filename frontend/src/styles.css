@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+.kanban-column {
+  min-height: 520px;
+}
+
+.rich-editor {
+  min-height: 110px;
+  border: 1px solid #c9d1dc;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fff;
+}

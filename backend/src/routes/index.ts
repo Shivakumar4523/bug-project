@@ -1,0 +1,27 @@
+import { Router } from "express";
+import { authRoutes } from "./authRoutes.js";
+import { issueRoutes } from "./issueRoutes.js";
+import { notificationRoutes } from "./notificationRoutes.js";
+import { reportRoutes } from "./reportRoutes.js";
+import { crudRoutes } from "./crudRoutes.js";
+import { userRoutes } from "./userRoutes.js";
+import { Project } from "../models/Project.js";
+import { Team } from "../models/Team.js";
+import { Milestone } from "../models/Milestone.js";
+import { Category, EmailTemplate, Priority, Status } from "../models/SettingsModels.js";
+import { ActivityLog } from "../models/ActivityLog.js";
+
+export const apiRoutes = Router();
+apiRoutes.use("/auth", authRoutes);
+apiRoutes.use("/projects", crudRoutes(Project, "Project"));
+apiRoutes.use("/issues", issueRoutes);
+apiRoutes.use("/users", userRoutes);
+apiRoutes.use("/teams", crudRoutes(Team, "Team"));
+apiRoutes.use("/milestones", crudRoutes(Milestone, "Milestone"));
+apiRoutes.use("/categories", crudRoutes(Category, "Category"));
+apiRoutes.use("/priorities", crudRoutes(Priority, "Priority"));
+apiRoutes.use("/statuses", crudRoutes(Status, "Status"));
+apiRoutes.use("/email-templates", crudRoutes(EmailTemplate, "EmailTemplate"));
+apiRoutes.use("/reports", reportRoutes);
+apiRoutes.use("/notifications", notificationRoutes);
+apiRoutes.use("/activity-logs", crudRoutes(ActivityLog, "ActivityLog"));

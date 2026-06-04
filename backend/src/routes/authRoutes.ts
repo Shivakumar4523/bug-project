@@ -1,0 +1,12 @@
+import { Router } from "express";
+import { authController, schemas } from "../controllers/authController.js";
+import { validate } from "../middleware/validate.js";
+import { authenticate, authorize } from "../middleware/auth.js";
+
+export const authRoutes = Router();
+authRoutes.get("/me", authenticate, authController.me);
+authRoutes.post("/login", validate(schemas.login), authController.login);
+authRoutes.post("/register", authenticate, authorize("Admin"), validate(schemas.register), authController.register);
+authRoutes.post("/refresh", validate(schemas.refresh), authController.refresh);
+authRoutes.post("/forgot-password", validate(schemas.forgot), authController.forgot);
+authRoutes.post("/reset-password", validate(schemas.reset), authController.reset);

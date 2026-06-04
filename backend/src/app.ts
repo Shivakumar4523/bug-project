@@ -1,0 +1,26 @@
+import express from "express";
+import "express-async-errors";
+import cors from "cors";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import morgan from "morgan";
+import compression from "compression";
+import path from "node:path";
+import { env } from "./config/env.js";
+import { apiRoutes } from "./routes/index.js";
+import { errorHandler, notFound } from "./middleware/errorHandler.js";
+
+export const app = express();
+
+app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(cors({ origin: env.clientUrl, credentials: true }));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 500 }));
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use(compression());
+app.use(morgan("combined"));
+app.use("/uploads", express.static(path.resolve("uploads")));
+app.get("/health", (_req, res) => res.json({ ok: true, service: "PIRNAV Bug Tracking API" }));
+app.use("/api", apiRoutes);
+app.use(notFound);
+app.use(errorHandler);

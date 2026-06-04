@@ -1,0 +1,16 @@
+import { Router } from "express";
+import { issueController } from "../controllers/issueController.js";
+import { authenticate, authorize } from "../middleware/auth.js";
+import { upload } from "../middleware/upload.js";
+export const issueRoutes = Router();
+issueRoutes.use(authenticate);
+issueRoutes.get("/", issueController.list);
+issueRoutes.get("/:id", issueController.get);
+issueRoutes.post("/", authorize("Admin", "Tester"), issueController.create);
+issueRoutes.put("/:id", issueController.update);
+issueRoutes.delete("/:id", authorize("Admin"), issueController.remove);
+issueRoutes.post("/:id/uploads", upload.array("files", 5), issueController.upload);
+issueRoutes.post("/:id/watch", issueController.watch);
+issueRoutes.delete("/:id/watch", issueController.unwatch);
+issueRoutes.get("/:id/comments", issueController.comments);
+issueRoutes.post("/:id/comments", upload.array("files", 4), issueController.addComment);
