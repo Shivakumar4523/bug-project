@@ -7,6 +7,15 @@ import { emitNotification } from "../realtime/socket.js";
 import { logActivity } from "./activityService.js";
 import { mailService } from "./mailService.js";
 
+// Helper function to keep only the last 5 notifications per user
+async function cleanupOldNotifications(userId: string) {
+  const userNotifications = await Notification.find({ user: userId }).sort({ createdAt: -1 }).skip(5);
+  if (userNotifications.length > 0) {
+    const oldIds = userNotifications.map((n) => n._id);
+    await Notification.deleteMany({ _id: { $in: oldIds } });
+  }
+}
+
 async function nextIssueNumber(projectId: string) {
   const project = await Project.findById(projectId);
   if (!project) throw new AppError(404, "Project not found");
@@ -29,6 +38,7 @@ async function notifyAssignee(assignee: string | undefined, issueId: string, tit
   if (!user) return;
   const notification = await Notification.create({ user: assignee, title: "Issue Assigned", message: title, type: "Issue Assigned", entity: issueId });
   emitNotification(assignee, notification);
+  await cleanupOldNotifications(assignee);
   if (options.sendEmail !== false) {
     await mailService.send(user.email, "PIRNAV issue assigned", `<p>You were assigned: <strong>${escapeHtml(title)}</strong></p>`);
   }
@@ -39,6 +49,7 @@ async function notifyUsers(filter: Record<string, unknown>, title: string, messa
   for (const user of users) {
     const notification = await Notification.create({ user: user._id, title, message, type, entity: issueId });
     emitNotification(user._id.toString(), notification);
+    await cleanupOldNotifications(user._id.toString());
   }
 }
 
@@ -124,6 +135,7 @@ export const issueService = {
       if (update.status === "CLOSED") await notifyUsers({ role: "Admin", disabled: { $ne: true } }, "Issue Closed", before.title, "Status Changed", id);
       for (const watcher of before.watchers) {
         await Notification.create({ user: watcher, title: "Status Changed", message: `${before.issueNumber} moved to ${update.status}`, type: "Status Changed", entity: id });
+        await cleanupOldNotifications(watcher.toString());
       }
     } else if (update.assignee && update.assignee !== String(before.assignee)) {
       await logActivity(user.id, "Assignment Changed", "Issue", id, { assignee: update.assignee });
@@ -134,3 +146,5 @@ export const issueService = {
     return issue;
   }
 };
+
+export { cleanupOldNotifications };
