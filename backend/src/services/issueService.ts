@@ -68,7 +68,7 @@ async function notifyAssignee(assignee: string | undefined, issueId: string, tit
     }
   );
 }
-
+}
 async function notifyUsers(filter: Record<string, unknown>, title: string, message: string, type: "Issue Created" | "Issue Assigned" | "Status Changed" | "Comment Added", issueId: string) {
   const users = await User.find(filter).select("_id email");
   for (const user of users) {
