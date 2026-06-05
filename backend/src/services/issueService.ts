@@ -32,7 +32,7 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
-async function notifyAssignee(assignee: string | undefined, issueId: string, title: string, options: { sendEmail?: boolean } = {}) {
+async function notifyAssignee(assignee: string | undefined, issueId: string, title: string, options: { sendEmail?: boolean; sender?: Express.User } = {}) {
   if (!assignee) return;
   const user = await User.findById(assignee);
   if (!user) return;
@@ -40,7 +40,7 @@ async function notifyAssignee(assignee: string | undefined, issueId: string, tit
   emitNotification(assignee, notification);
   await cleanupOldNotifications(assignee);
   if (options.sendEmail !== false) {
-    await mailService.send(user.email, "PIRNAV issue assigned", `<p>You were assigned: <strong>${escapeHtml(title)}</strong></p>`);
+    await mailService.send(user.email, "PIRNAV issue assigned", `<p>You were assigned: <strong>${escapeHtml(title)}</strong></p>`, options.sender ? { senderUserId: options.sender.id, fromName: `${options.sender.name} via PIRNAV`, replyTo: options.sender.email } : {});
   }
 }
 
@@ -75,7 +75,7 @@ async function emailDevelopersAboutTesterIssue(issue: any, reporter: Express.Use
   `;
 
   for (const user of users) {
-    await mailService.send(user.email, subject, html, { fromName: `${reporter.name} via PIRNAV`, replyTo: reporter.email });
+    await mailService.send(user.email, subject, html, { senderUserId: reporter.id, fromName: `${reporter.name} via PIRNAV`, replyTo: reporter.email });
   }
 }
 
@@ -102,7 +102,7 @@ export const issueService = {
       await emailDevelopersAboutTesterIssue(issue, user, payload.assignee);
       await notifyAssignee(payload.assignee, issue._id.toString(), issue.title, { sendEmail: false });
     } else {
-      await notifyAssignee(payload.assignee, issue._id.toString(), issue.title);
+      await notifyAssignee(payload.assignee, issue._id.toString(), issue.title, { sender: user });
     }
     return issue;
   },
@@ -139,7 +139,7 @@ export const issueService = {
       }
     } else if (update.assignee && update.assignee !== String(before.assignee)) {
       await logActivity(user.id, "Assignment Changed", "Issue", id, { assignee: update.assignee });
-      await notifyAssignee(update.assignee, id, before.title);
+      await notifyAssignee(update.assignee, id, before.title, { sender: user });
     } else {
       await logActivity(user.id, "Issue Updated", "Issue", id);
     }

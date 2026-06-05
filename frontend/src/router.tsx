@@ -10,6 +10,7 @@ import { UsersPage } from "./pages/UsersPage";
 import { TeamsPage } from "./pages/TeamsPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { AccountSettingsPage } from "./pages/AccountSettingsPage";
 import { currentUser, getToken } from "./api/client";
 import type { User } from "./types";
 
@@ -41,7 +42,7 @@ export const router = createBrowserRouter([
       { path: "priorities", element: <SettingsPage resource="priorities" title="Priorities" /> },
       { path: "statuses", element: <SettingsPage resource="statuses" title="Statuses" /> },
       { path: "email-templates", element: <SettingsPage resource="email-templates" title="Email Templates" template /> },
-      { path: "settings", element: <SettingsPage resource="categories" title="Settings" /> }
+      { path: "settings", element: <AccountSettingsPage /> }
     ]
   }
 ]);

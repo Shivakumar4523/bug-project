@@ -12,6 +12,15 @@ const userSchema = new Schema(
     department: { type: String, default: "" },
     profileImage: { type: String, default: "" },
     disabled: { type: Boolean, default: false },
+    smtp: {
+      enabled: { type: Boolean, default: false },
+      host: { type: String, default: "", trim: true },
+      port: { type: Number, default: 587 },
+      secure: { type: Boolean, default: false },
+      user: { type: String, default: "", trim: true },
+      passEncrypted: { type: String, default: "" },
+      fromName: { type: String, default: "", trim: true }
+    },
     refreshTokenHash: { type: String, default: "" },
     resetTokenHash: { type: String, default: "" },
     resetTokenExpiresAt: { type: Date }

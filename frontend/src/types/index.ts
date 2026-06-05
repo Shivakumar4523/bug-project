@@ -3,6 +3,17 @@ export type IssueStatus = "OPEN" | "ASSIGNED" | "IN_PROGRESS" | "FIXED" | "READY
 export type IssuePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type IssueSeverity = "MINOR" | "MAJOR" | "CRITICAL" | "BLOCKER";
 
+export interface UserSmtpSettings {
+  enabled: boolean;
+  host: string;
+  port: number;
+  secure: boolean;
+  user: string;
+  fromName: string;
+  hasPassword: boolean;
+  configured: boolean;
+}
+
 export interface User {
   id?: string;
   _id?: string;
@@ -12,6 +23,8 @@ export interface User {
   department?: string;
   profileImage?: string;
   disabled?: boolean;
+  smtpConfigured?: boolean;
+  smtp?: UserSmtpSettings;
 }
 
 export interface Project {

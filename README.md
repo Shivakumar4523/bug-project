@@ -30,5 +30,5 @@ All seeded users are initialized with the same password.
 
 ## Notes
 
-- Configure SMTP variables in `docker-compose.yml` or `backend/.env.example` to send real email.
+- Configure SMTP variables in `docker-compose.yml` or `backend/.env.example` to send real email. Users can also save their own SMTP sender in Settings; issue emails use that sender first and fall back to the default SMTP account.
 - Uploaded files are stored under `/uploads` in the backend container and persisted in the `uploads` Docker volume.
