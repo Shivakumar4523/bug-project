@@ -19,7 +19,7 @@ RUN npm install --omit=dev
 
 COPY --from=build /app/dist ./dist
 
-RUN mkdir -p uploads
+RUN mkdir -p /app/uploads
 
 EXPOSE 5000
 
