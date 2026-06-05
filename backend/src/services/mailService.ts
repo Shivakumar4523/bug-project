@@ -26,7 +26,10 @@ export const mailService = {
     try {
       const info = await transporter.sendMail({
         from: options.fromName
-          ? { name: options.fromName, address: env.smtp.user }
+          ? {
+              name: options.fromName,
+              address: env.smtp.user
+            }
           : env.smtp.user,
         replyTo: options.replyTo,
         to,
@@ -40,4 +43,56 @@ export const mailService = {
       throw error;
     }
   }
+};
+
+export const sendIssueAssignedEmail = async ({
+  developerEmail,
+  developerName,
+  issueTitle,
+  issueDescription,
+  testerName
+}: {
+  developerEmail: string;
+  developerName: string;
+  issueTitle: string;
+  issueDescription: string;
+  testerName: string;
+}) => {
+  await mailService.send(
+    developerEmail,
+    `New Issue Assigned - ${issueTitle}`,
+    `
+    <div style="font-family:Arial,sans-serif">
+      <h2>New Issue Assigned</h2>
+
+      <p>Hello ${developerName},</p>
+
+      <p>A new issue has been assigned to you.</p>
+
+      <table border="1" cellpadding="8" cellspacing="0">
+        <tr>
+          <td><strong>Issue Title</strong></td>
+          <td>${issueTitle}</td>
+        </tr>
+
+        <tr>
+          <td><strong>Description</strong></td>
+          <td>${issueDescription}</td>
+        </tr>
+
+        <tr>
+          <td><strong>Reported By</strong></td>
+          <td>${testerName}</td>
+        </tr>
+      </table>
+
+      <br/>
+
+      <p>Please login and start working on this issue.</p>
+    </div>
+    `,
+    {
+      fromName: "Bug Tracker"
+    }
+  );
 };
