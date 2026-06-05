@@ -39,11 +39,43 @@ async function notifyAssignee(assignee: string | undefined, issueId: string, tit
   const notification = await Notification.create({ user: assignee, title: "Issue Assigned", message: title, type: "Issue Assigned", entity: issueId });
   emitNotification(assignee, notification);
   await cleanupOldNotifications(assignee);
+<<<<<<< HEAD
   if (options.sendEmail !== false) {
     await mailService.send(user.email, "PIRNAV issue assigned", `<p>You were assigned: <strong>${escapeHtml(title)}</strong></p>`, options.sender ? { senderUserId: options.sender.id, fromName: `${options.sender.name} via PIRNAV`, replyTo: options.sender.email } : {});
   }
 }
+=======
+ if (options.sendEmail !== false) {
+  await mailService.send(
+    user.email,
+    "🐞 New Issue Assigned",
+    `
+      <div style="font-family:Arial,sans-serif">
+        <h2>New Issue Assigned</h2>
+>>>>>>> e467c1dd625fedb6857fdb43add7a14b2163c37b
 
+        <p>Hello ${escapeHtml(user.name)},</p>
+
+        <p>You have been assigned a new issue.</p>
+
+        <table border="1" cellpadding="10" cellspacing="0">
+          <tr>
+            <td><strong>Issue</strong></td>
+            <td>${escapeHtml(title)}</td>
+          </tr>
+        </table>
+
+        <br/>
+
+        <p>Please login to PIRNAV and start working on the issue.</p>
+      </div>
+    `,
+    {
+      fromName: "PIRNAV Bug Tracker"
+    }
+  );
+}
+}
 async function notifyUsers(filter: Record<string, unknown>, title: string, message: string, type: "Issue Created" | "Issue Assigned" | "Status Changed" | "Comment Added", issueId: string) {
   const users = await User.find(filter).select("_id email");
   for (const user of users) {
@@ -53,32 +85,123 @@ async function notifyUsers(filter: Record<string, unknown>, title: string, messa
   }
 }
 
-async function emailDevelopersAboutTesterIssue(issue: any, reporter: Express.User, assignee?: string) {
+async function emailDevelopersAboutTesterIssue(
+  issue: any,
+  reporter: Express.User,
+  assignee?: string
+) {
   if (reporter.role !== "Tester") return;
 
-  let users = assignee ? await User.find({ _id: assignee, role: "Developer", disabled: { $ne: true } }).select("email name") : [];
-  if (!users.length) {
-    users = await User.find({ role: "Developer", disabled: { $ne: true } }).select("email name");
+  let developers = assignee
+    ? await User.find({
+        _id: assignee,
+        role: "Developer",
+        disabled: { $ne: true }
+      }).select("email name")
+    : [];
+
+  if (!developers.length) {
+    developers = await User.find({
+      role: "Developer",
+      disabled: { $ne: true }
+    }).select("email name");
   }
-  if (!users.length) return;
 
-  const subject = `PIRNAV issue created: ${issue.issueNumber}`;
-  const html = `
-    <p>A tester created a new issue for developer review.</p>
-    <p><strong>${escapeHtml(issue.issueNumber)} - ${escapeHtml(issue.title)}</strong></p>
-    <p>
-      <strong>Reporter:</strong> ${escapeHtml(reporter.name)} (${escapeHtml(reporter.email)})<br/>
-      <strong>Status:</strong> ${escapeHtml(issue.status)}<br/>
-      <strong>Priority:</strong> ${escapeHtml(issue.priority)}
-    </p>
-    ${issue.description ? `<p><strong>Description:</strong><br/>${escapeHtml(issue.description).replace(/\n/g, "<br/>")}</p>` : ""}
-  `;
+  if (!developers.length) return;
 
+<<<<<<< HEAD
   for (const user of users) {
     await mailService.send(user.email, subject, html, { senderUserId: reporter.id, fromName: `${reporter.name} via PIRNAV`, replyTo: reporter.email });
+=======
+  const subject = `🐞 New Issue Assigned - ${issue.issueNumber}`;
+
+  for (const developer of developers) {
+    const html = `
+      <div style="font-family:Arial,sans-serif;max-width:700px">
+
+        <h2 style="color:#1976d2">
+          New Issue Assigned
+        </h2>
+
+        <p>Hello <strong>${escapeHtml(developer.name)}</strong>,</p>
+
+        <p>
+          A new issue has been created by the tester and assigned to you.
+        </p>
+
+        <table
+          border="1"
+          cellpadding="10"
+          cellspacing="0"
+          style="border-collapse:collapse;width:100%"
+        >
+          <tr>
+            <td><strong>Issue Number</strong></td>
+            <td>${escapeHtml(issue.issueNumber)}</td>
+          </tr>
+
+          <tr>
+            <td><strong>Title</strong></td>
+            <td>${escapeHtml(issue.title)}</td>
+          </tr>
+
+          <tr>
+            <td><strong>Status</strong></td>
+            <td>${escapeHtml(issue.status)}</td>
+          </tr>
+
+          <tr>
+            <td><strong>Priority</strong></td>
+            <td>${escapeHtml(issue.priority)}</td>
+          </tr>
+
+          <tr>
+            <td><strong>Reporter</strong></td>
+            <td>
+              ${escapeHtml(reporter.name)}
+              (${escapeHtml(reporter.email)})
+            </td>
+          </tr>
+        </table>
+
+        ${
+          issue.description
+            ? `
+          <h3>Description</h3>
+          <div
+            style="
+              background:#f5f5f5;
+              padding:15px;
+              border-radius:6px;
+            "
+          >
+            ${escapeHtml(issue.description).replace(/\n/g, "<br/>")}
+          </div>
+        `
+            : ""
+        }
+
+        <br/>
+
+        <p>
+          Please login to the Bug Tracker and start working on this issue.
+        </p>
+
+      </div>
+    `;
+
+    await mailService.send(
+      developer.email,
+      subject,
+      html,
+      {
+        fromName: "PIRNAV Bug Tracker",
+        replyTo: reporter.email
+      }
+    );
+>>>>>>> e467c1dd625fedb6857fdb43add7a14b2163c37b
   }
 }
-
 export const issueService = {
   async create(data: any, user: Express.User) {
     const payload = { ...data };
