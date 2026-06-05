@@ -39,9 +39,34 @@ async function notifyAssignee(assignee: string | undefined, issueId: string, tit
   const notification = await Notification.create({ user: assignee, title: "Issue Assigned", message: title, type: "Issue Assigned", entity: issueId });
   emitNotification(assignee, notification);
   await cleanupOldNotifications(assignee);
-  if (options.sendEmail !== false) {
-    await mailService.send(user.email, "PIRNAV issue assigned", `<p>You were assigned: <strong>${escapeHtml(title)}</strong></p>`);
-  }
+ if (options.sendEmail !== false) {
+  await mailService.send(
+    user.email,
+    "🐞 New Issue Assigned",
+    `
+      <div style="font-family:Arial,sans-serif">
+        <h2>New Issue Assigned</h2>
+
+        <p>Hello ${escapeHtml(user.name)},</p>
+
+        <p>You have been assigned a new issue.</p>
+
+        <table border="1" cellpadding="10" cellspacing="0">
+          <tr>
+            <td><strong>Issue</strong></td>
+            <td>${escapeHtml(title)}</td>
+          </tr>
+        </table>
+
+        <br/>
+
+        <p>Please login to PIRNAV and start working on the issue.</p>
+      </div>
+    `,
+    {
+      fromName: "PIRNAV Bug Tracker"
+    }
+  );
 }
 
 async function notifyUsers(filter: Record<string, unknown>, title: string, message: string, type: "Issue Created" | "Issue Assigned" | "Status Changed" | "Comment Added", issueId: string) {
