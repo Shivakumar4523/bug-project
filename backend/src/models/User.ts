@@ -23,17 +23,10 @@ const userSchema = new Schema(
     },
     refreshTokenHash: { type: String, default: "" },
     resetTokenHash: { type: String, default: "" },
-    resetTokenExpiresAt: { type: Date },
-
-    // User SMTP Settings
-    smtpEnabled: { type: Boolean, default: false },
-    smtpHost: { type: String, default: "" },
-    smtpPort: { type: Number, default: 587 },
-    smtpUser: { type: String, default: "" },
-    smtpPass: { type: String, default: "" }
-    },
-    { timestamps: true }
-    );
+    resetTokenExpiresAt: { type: Date }
+  },
+  { timestamps: true }
+);
 
 export type UserDocument = InferSchemaType<typeof userSchema> & { _id: mongoose.Types.ObjectId };
 export const User = mongoose.model("User", userSchema);

@@ -7,7 +7,6 @@ import { emitNotification } from "../realtime/socket.js";
 import { logActivity } from "./activityService.js";
 import { mailService } from "./mailService.js";
 
-// Helper function to keep only the last 5 notifications per user
 async function cleanupOldNotifications(userId: string) {
   const userNotifications = await Notification.find({ user: userId }).sort({ createdAt: -1 }).skip(5);
   if (userNotifications.length > 0) {
@@ -32,27 +31,43 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
-async function notifyAssignee(assignee: string | undefined, issueId: string, title: string, options: { sendEmail?: boolean; sender?: Express.User } = {}) {
+function senderOptions(sender: Express.User) {
+  return {
+    senderUserId: sender.id,
+    fromName: `${sender.name} via PIRNAV`,
+    replyTo: sender.email
+  };
+}
+
+async function notifyAssignee(
+  assignee: string | undefined,
+  issueId: string,
+  title: string,
+  options: { sendEmail?: boolean; sender?: Express.User } = {}
+) {
   if (!assignee) return;
+
   const user = await User.findById(assignee);
   if (!user) return;
-  const notification = await Notification.create({ user: assignee, title: "Issue Assigned", message: title, type: "Issue Assigned", entity: issueId });
+
+  const notification = await Notification.create({
+    user: assignee,
+    title: "Issue Assigned",
+    message: title,
+    type: "Issue Assigned",
+    entity: issueId
+  });
   emitNotification(assignee, notification);
   await cleanupOldNotifications(assignee);
-<<<<<<< HEAD
-  if (options.sendEmail !== false) {
-    await mailService.send(user.email, "PIRNAV issue assigned", `<p>You were assigned: <strong>${escapeHtml(title)}</strong></p>`, options.sender ? { senderUserId: options.sender.id, fromName: `${options.sender.name} via PIRNAV`, replyTo: options.sender.email } : {});
-  }
-}
-=======
- if (options.sendEmail !== false) {
+
+  if (options.sendEmail === false) return;
+
   await mailService.send(
     user.email,
-    "🐞 New Issue Assigned",
+    "PIRNAV issue assigned",
     `
       <div style="font-family:Arial,sans-serif">
         <h2>New Issue Assigned</h2>
->>>>>>> e467c1dd625fedb6857fdb43add7a14b2163c37b
 
         <p>Hello ${escapeHtml(user.name)},</p>
 
@@ -70,13 +85,17 @@ async function notifyAssignee(assignee: string | undefined, issueId: string, tit
         <p>Please login to PIRNAV and start working on the issue.</p>
       </div>
     `,
-    {
-      fromName: "PIRNAV Bug Tracker"
-    }
+    options.sender ? senderOptions(options.sender) : { fromName: "PIRNAV Bug Tracker" }
   );
 }
-}
-async function notifyUsers(filter: Record<string, unknown>, title: string, message: string, type: "Issue Created" | "Issue Assigned" | "Status Changed" | "Comment Added", issueId: string) {
+
+async function notifyUsers(
+  filter: Record<string, unknown>,
+  title: string,
+  message: string,
+  type: "Issue Created" | "Issue Assigned" | "Status Changed" | "Comment Added",
+  issueId: string
+) {
   const users = await User.find(filter).select("_id email");
   for (const user of users) {
     const notification = await Notification.create({ user: user._id, title, message, type, entity: issueId });
@@ -85,11 +104,7 @@ async function notifyUsers(filter: Record<string, unknown>, title: string, messa
   }
 }
 
-async function emailDevelopersAboutTesterIssue(
-  issue: any,
-  reporter: Express.User,
-  assignee?: string
-) {
+async function emailDevelopersAboutTesterIssue(issue: any, reporter: Express.User, assignee?: string) {
   if (reporter.role !== "Tester") return;
 
   let developers = assignee
@@ -109,58 +124,37 @@ async function emailDevelopersAboutTesterIssue(
 
   if (!developers.length) return;
 
-<<<<<<< HEAD
-  for (const user of users) {
-    await mailService.send(user.email, subject, html, { senderUserId: reporter.id, fromName: `${reporter.name} via PIRNAV`, replyTo: reporter.email });
-=======
-  const subject = `🐞 New Issue Assigned - ${issue.issueNumber}`;
+  const subject = `New Issue Assigned - ${issue.issueNumber}`;
 
   for (const developer of developers) {
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:700px">
-
-        <h2 style="color:#1976d2">
-          New Issue Assigned
-        </h2>
+        <h2 style="color:#1976d2">New Issue Assigned</h2>
 
         <p>Hello <strong>${escapeHtml(developer.name)}</strong>,</p>
 
-        <p>
-          A new issue has been created by the tester and assigned to you.
-        </p>
+        <p>A new issue has been created by the tester and assigned to you.</p>
 
-        <table
-          border="1"
-          cellpadding="10"
-          cellspacing="0"
-          style="border-collapse:collapse;width:100%"
-        >
+        <table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;width:100%">
           <tr>
             <td><strong>Issue Number</strong></td>
             <td>${escapeHtml(issue.issueNumber)}</td>
           </tr>
-
           <tr>
             <td><strong>Title</strong></td>
             <td>${escapeHtml(issue.title)}</td>
           </tr>
-
           <tr>
             <td><strong>Status</strong></td>
             <td>${escapeHtml(issue.status)}</td>
           </tr>
-
           <tr>
             <td><strong>Priority</strong></td>
             <td>${escapeHtml(issue.priority)}</td>
           </tr>
-
           <tr>
             <td><strong>Reporter</strong></td>
-            <td>
-              ${escapeHtml(reporter.name)}
-              (${escapeHtml(reporter.email)})
-            </td>
+            <td>${escapeHtml(reporter.name)} (${escapeHtml(reporter.email)})</td>
           </tr>
         </table>
 
@@ -168,13 +162,7 @@ async function emailDevelopersAboutTesterIssue(
           issue.description
             ? `
           <h3>Description</h3>
-          <div
-            style="
-              background:#f5f5f5;
-              padding:15px;
-              border-radius:6px;
-            "
-          >
+          <div style="background:#f5f5f5;padding:15px;border-radius:6px">
             ${escapeHtml(issue.description).replace(/\n/g, "<br/>")}
           </div>
         `
@@ -183,25 +171,14 @@ async function emailDevelopersAboutTesterIssue(
 
         <br/>
 
-        <p>
-          Please login to the Bug Tracker and start working on this issue.
-        </p>
-
+        <p>Please login to the Bug Tracker and start working on this issue.</p>
       </div>
     `;
 
-    await mailService.send(
-      developer.email,
-      subject,
-      html,
-      {
-        fromName: "PIRNAV Bug Tracker",
-        replyTo: reporter.email
-      }
-    );
->>>>>>> e467c1dd625fedb6857fdb43add7a14b2163c37b
+    await mailService.send(developer.email, subject, html, senderOptions(reporter));
   }
 }
+
 export const issueService = {
   async create(data: any, user: Express.User) {
     const payload = { ...data };
@@ -218,7 +195,13 @@ export const issueService = {
     }
 
     const status = payload.status ?? (payload.assignee ? "ASSIGNED" : "OPEN");
-    const issue = await Issue.create({ ...payload, status, reporter: user.id, assignedBy: payload.assignee ? user.id : undefined, issueNumber: await nextIssueNumber(payload.project) });
+    const issue = await Issue.create({
+      ...payload,
+      status,
+      reporter: user.id,
+      assignedBy: payload.assignee ? user.id : undefined,
+      issueNumber: await nextIssueNumber(payload.project)
+    });
     await logActivity(user.id, "Issue Created", "Issue", issue._id.toString(), { title: issue.title });
     await notifyUsers({ role: "Admin", disabled: { $ne: true } }, "Issue Created", issue.title, "Issue Created", issue._id.toString());
     if (user.role === "Tester") {
@@ -233,6 +216,7 @@ export const issueService = {
   async update(id: string, data: any, user: Express.User) {
     const before = await Issue.findById(id);
     if (!before) throw new AppError(404, "Issue not found");
+
     const update = { ...data };
     if (user.role === "Admin") {
       delete update.priority;
@@ -250,6 +234,7 @@ export const issueService = {
       update.assignedBy = user.id;
       if (!update.status) update.status = "ASSIGNED";
     }
+
     const issue = await Issue.findByIdAndUpdate(id, update, { new: true, runValidators: true });
     if (update.status && update.status !== before.status) {
       await logActivity(user.id, "Status Changed", "Issue", id, { from: before.status, to: update.status });

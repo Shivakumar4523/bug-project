@@ -21,22 +21,12 @@ services:
 
       ADMIN_EMAIL: admin@pirnav.com
       ADMIN_PASSWORD: Pirnav@12345
-<<<<<<< HEAD
       SMTP_HOST: smtp.hostinger.com
       SMTP_PORT: 465
       SMTP_SECURE: "true"
       SMTP_USER:
       SMTP_PASS:
       SMTP_ENCRYPTION_SECRET: pirnav_smtp_change_me
-=======
-
-      SMTP_HOST: smtp.hostinger.com
-      SMTP_PORT: 465
-      SMTP_USER: shivakumar.galibu@pirnav.com
-      SMTP_PASS: Shivakumar@123
-      SMTP_FROM: shivakumar.galibu@pirnav.com
-
->>>>>>> e467c1dd625fedb6857fdb43add7a14b2163c37b
     volumes:
       - uploads:/app/uploads
 

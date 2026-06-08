@@ -52,55 +52,24 @@ function defaultSmtpSender(): SmtpSender | null {
 }
 
 export const mailService = {
-<<<<<<< HEAD
   async send(to: string, subject: string, html: string, options: MailOptions = {}) {
     const sender = (await userSmtpSender(options.senderUserId)) ?? defaultSmtpSender();
     if (!sender) {
-=======
-  async send(
-    to: string,
-    subject: string,
-    html: string,
-    options: { fromName?: string; replyTo?: string } = {}
-  ) {
-    if (!env.smtp.host || !env.smtp.user || !env.smtp.pass) {
->>>>>>> e467c1dd625fedb6857fdb43add7a14b2163c37b
       console.log(`[email skipped] ${to} | ${subject}`);
       return;
     }
 
     const transporter = nodemailer.createTransport({
-<<<<<<< HEAD
       host: sender.host,
       port: sender.port,
       secure: sender.secure,
       auth: { user: sender.user, pass: sender.pass }
     });
-    await transporter.sendMail({
-      from: options.fromName || sender.fromName ? { name: options.fromName ?? sender.fromName!, address: sender.user } : sender.user,
-      replyTo: options.replyTo,
-      to,
-      subject,
-      html
-=======
-      host: env.smtp.host,
-      port: Number(env.smtp.port),
-      secure: Number(env.smtp.port) === 465,
-      auth: {
-        user: env.smtp.user,
-        pass: env.smtp.pass
-      }
->>>>>>> e467c1dd625fedb6857fdb43add7a14b2163c37b
-    });
 
     try {
+      const fromName = options.fromName ?? sender.fromName;
       const info = await transporter.sendMail({
-        from: options.fromName
-          ? {
-              name: options.fromName,
-              address: env.smtp.user
-            }
-          : env.smtp.user,
+        from: fromName ? { name: fromName, address: sender.user } : sender.user,
         replyTo: options.replyTo,
         to,
         subject,
