@@ -37,7 +37,7 @@ export interface Project {
   status: string;
   startDate?: string;
   endDate?: string;
-  members?: User[];
+  members?: (User | string)[];
   createdAt?: string;
   updatedAt?: string;
 }

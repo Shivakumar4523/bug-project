@@ -7,6 +7,7 @@ import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
 import PeopleIcon from "@mui/icons-material/People";
@@ -33,7 +34,7 @@ const sections: { label: string; items: { text: string; icon: ReactNode; to: str
     { text: "Reports", icon: <AssessmentIcon />, to: "/reports", roles: ["Admin"] }
   ] },
   { label: "MANAGEMENT", items: [
-    { text: "Overview", icon: <AssessmentIcon />, to: "/management", roles: ["Admin"] },
+    { text: "Chat", icon: <ChatBubbleOutlineIcon />, to: "/management", roles: ["Admin"] },
     { text: "Projects", icon: <AccountTreeIcon />, to: "/projects", roles: ["Admin"] },
     { text: "Milestones", icon: <FlagIcon />, to: "/milestones", roles: ["Admin"] },
     { text: "Teams", icon: <GroupsIcon />, to: "/teams", roles: ["Admin"] },

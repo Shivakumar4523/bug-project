@@ -40,7 +40,7 @@ export function IssueForm({
   const selectedProjectId = useWatch({ control, name: "project" });
   const selectedProject = projects.find(p => p._id === selectedProjectId);
   const projectMembers = selectedProject?.members ?? [];
-  const projectMemberIds = new Set(projectMembers.map(m => m._id ?? m.id));
+  const projectMemberIds = new Set(projectMembers.map(m => typeof m === "string" ? m : m._id ?? m.id));
   const availableAssignees = users.filter(u => projectMemberIds.has(u._id ?? u.id));
 
   return (
