@@ -3,12 +3,55 @@ import { Box, Card, CardContent, Chip, Grid2 as Grid, MenuItem, Stack, TextField
 import { useState } from "react";
 import { api, crud, currentUser } from "../api/client";
 import { DataState } from "../components/DataState";
+import { IssueDetailDialog } from "../components/IssueDetailDialog";
 import { PageHeader } from "../components/PageHeader";
-import type { Issue, IssueStatus, Project, User } from "../types";
+import type { Issue, IssueStatus, Project, Role, User } from "../types";
 import { issueStatusLabel } from "../utils/issues";
 
 const statuses: IssueStatus[] = ["BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"];
 const priorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
+
+function KanbanCard({ issue, role, onDragStart }: { issue: Issue; role?: Role; onDragStart: (e: React.DragEvent) => void }) {
+  const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Card
+        draggable
+        onDragStart={onDragStart}
+        onClick={() => setOpen(true)}
+        sx={{
+          cursor: "pointer",
+          border: "1px solid #dde3ea",
+          transition: "box-shadow 0.15s, transform 0.1s",
+          "&:hover": {
+            boxShadow: "0 4px 16px rgba(15,98,254,0.13)",
+            transform: "translateY(-2px)",
+            borderColor: "#0f62fe"
+          }
+        }}
+      >
+        <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
+          <Typography variant="body2" fontWeight={800}>{issue.issueNumber}</Typography>
+          <Typography variant="body2">{issue.title}</Typography>
+          <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}>
+            <Chip size="small" label={issue.category} />
+            <Chip size="small" label={issue.priority} />
+            <Chip size="small" label={issue.assignee?.name ?? "Unassigned"} />
+          </Box>
+        </CardContent>
+      </Card>
+      <IssueDetailDialog
+        issue={issue}
+        open={open}
+        currentUserRole={role}
+        onClose={() => setOpen(false)}
+        onIssuePatched={() => qc.invalidateQueries({ queryKey: ["issues"] })}
+      />
+    </>
+  );
+}
 
 export function KanbanPage() {
   const qc = useQueryClient();
@@ -37,13 +80,7 @@ export function KanbanPage() {
                 <Typography variant="h6" sx={{ mb: 1 }}>{issueStatusLabel(status, me?.role)}</Typography>
                 <Stack spacing={1}>
                   {filtered.filter((i) => i.status === status).map((issue) => (
-                    <Card key={issue._id} draggable onDragStart={(e) => e.dataTransfer.setData("issueId", issue._id)} sx={{ cursor: "grab", border: "1px solid #dde3ea" }}>
-                      <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
-                        <Typography variant="body2" fontWeight={800}>{issue.issueNumber}</Typography>
-                        <Typography variant="body2">{issue.title}</Typography>
-                        <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}><Chip size="small" label={issue.category} /><Chip size="small" label={issue.priority} /><Chip size="small" label={issue.assignee?.name ?? "Unassigned"} /></Box>
-                      </CardContent>
-                    </Card>
+                    <KanbanCard key={issue._id} issue={issue} role={me?.role} onDragStart={(e) => e.dataTransfer.setData("issueId", issue._id)} />
                   ))}
                 </Stack>
               </CardContent>

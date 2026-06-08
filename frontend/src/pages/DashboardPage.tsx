@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { Box, Card, CardContent, Chip, Grid2 as Grid, IconButton, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import { Box, Card, CardContent, Chip, Grid2 as Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import { useState } from "react";
 import { Line, LineChart, Pie, PieChart, ResponsiveContainer, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import { api, currentUser } from "../api/client";
 import { DataState } from "../components/DataState";
+import { IssueDetailDialog } from "../components/IssueDetailDialog";
 import { PageHeader } from "../components/PageHeader";
 import type { Issue, User } from "../types";
 import { issueStatusLabel } from "../utils/issues";
@@ -12,6 +13,7 @@ const colors = ["#da1e28", "#ff832b", "#0f62fe", "#24a148", "#8a3ffc", "#525252"
 
 export function DashboardPage() {
   const me = currentUser<User>();
+  const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const stats = useQuery({ queryKey: ["dashboard"], queryFn: () => api<any>("/reports/dashboard") });
   const issues = useQuery({ queryKey: ["issues", "recent"], queryFn: () => api<Issue[]>("/issues") });
   if (stats.isLoading || issues.isLoading || stats.error || issues.error) return <DataState loading={stats.isLoading || issues.isLoading} error={stats.error || issues.error} />;
@@ -57,11 +59,20 @@ export function DashboardPage() {
               <Box sx={{ overflowX: "auto" }}>
                 <Table size="small">
                   <TableHead>
-                    <TableRow>{["ID", "Title", "Project", "Category", "Status", "Priority", "Assignee", "Updated", "Actions"].map((h) => <TableCell key={h} sx={{ whiteSpace: "nowrap", fontWeight: 800 }}>{h}</TableCell>)}</TableRow>
+                    <TableRow>
+                      {["ID", "Title", "Project", "Category", "Status", "Priority", "Assignee", "Updated"].map((h) => (
+                        <TableCell key={h} sx={{ whiteSpace: "nowrap", fontWeight: 800 }}>{h}</TableCell>
+                      ))}
+                    </TableRow>
                   </TableHead>
                   <TableBody>
                     {issues.data!.slice(0, 8).map((issue) => (
-                      <TableRow key={issue._id}>
+                      <TableRow
+                        key={issue._id}
+                        hover
+                        onClick={() => setSelectedIssue(issue)}
+                        sx={{ cursor: "pointer" }}
+                      >
                         <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.issueNumber}</TableCell>
                         <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.title}</TableCell>
                         <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.project?.key}</TableCell>
@@ -70,9 +81,6 @@ export function DashboardPage() {
                         <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.priority}</TableCell>
                         <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.assignee?.name ?? "Unassigned"}</TableCell>
                         <TableCell sx={{ whiteSpace: "nowrap" }}>{new Date(issue.updatedAt).toLocaleDateString()}</TableCell>
-                        <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          <IconButton size="small"><MoreHorizIcon /></IconButton>
-                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -82,6 +90,13 @@ export function DashboardPage() {
           </Card>
         </Grid>
       </Grid>
+
+      <IssueDetailDialog
+        issue={selectedIssue}
+        open={Boolean(selectedIssue)}
+        currentUserRole={me?.role}
+        onClose={() => setSelectedIssue(null)}
+      />
     </>
   );
 }
