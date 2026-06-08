@@ -94,10 +94,14 @@ export function ManagementPage() {
     () => conversationsFrom(users.data ?? [], projects.data ?? [], currentUserId),
     [currentUserId, projects.data, users.data]
   );
-  const active = conversations.find((conversation) => conversation.id === activeId) ?? conversations[0];
   const query = search.trim().toLowerCase();
-  const visibleDirect = conversations.filter((conversation) => conversation.kind === "direct" && [conversation.name, conversation.preview, conversation.subtitle].some((value) => value.toLowerCase().includes(query)));
-  const visibleProjects = conversations.filter((conversation) => conversation.kind === "project" && [conversation.name, conversation.preview, conversation.subtitle].some((value) => value.toLowerCase().includes(query)));
+  const hasSearch = query.length > 0;
+  const active = activeId ? conversations.find((conversation) => conversation.id === activeId) : undefined;
+  const matchesSearch = (conversation: Conversation) => [conversation.name, conversation.preview, conversation.subtitle].some((value) => value.toLowerCase().includes(query));
+  const directMatches = hasSearch ? conversations.filter((conversation) => conversation.kind === "direct" && matchesSearch(conversation)) : [];
+  const projectMatches = hasSearch ? conversations.filter((conversation) => conversation.kind === "project" && matchesSearch(conversation)) : [];
+  const visibleDirect = directMatches.slice(0, 4);
+  const visibleProjects = projectMatches.slice(0, 2);
 
   const messages = useQuery({
     queryKey: ["management-chat", active?.id],
@@ -126,9 +130,9 @@ export function ManagementPage() {
   return (
     <>
       <PageHeader title="Management Chat" />
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "360px minmax(0, 1fr)" }, gap: 2, minHeight: { lg: "calc(100vh - 150px)" } }}>
-        <Paper elevation={0} sx={{ border: "1px solid #dbe7f3", borderRadius: 2, p: 2.5, bgcolor: "#f6faff" }}>
-          <Typography sx={{ fontSize: 12, fontWeight: 900, color: "primary.main", letterSpacing: 3 }}>REALTIME</Typography>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "320px minmax(0, 1fr)" }, gap: 2, alignItems: "start" }}>
+        <Paper elevation={0} sx={{ border: "1px solid #dde3ea", borderRadius: "8px", p: 2, bgcolor: "background.paper", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+          <Typography sx={{ fontSize: 12, fontWeight: 800, color: "text.secondary", letterSpacing: 1.8 }}>REALTIME</Typography>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
             <ChatBubbleOutlineIcon color="primary" />
             <Typography variant="h5" fontWeight={900}>Chat</Typography>
@@ -140,40 +144,46 @@ export function ManagementPage() {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment> }}
-            sx={{ mb: 2, "& .MuiOutlinedInput-root": { borderRadius: 2, bgcolor: "white" } }}
+            sx={{ mb: 2, "& .MuiOutlinedInput-root": { borderRadius: "8px", bgcolor: "#eef2f6" } }}
           />
 
-          <Stack direction="row" justifyContent="space-between" sx={{ px: 0.5, mb: 1 }}>
-            <Typography sx={{ fontSize: 12, fontWeight: 900, color: "text.secondary", letterSpacing: 3 }}>DIRECT MESSAGES</Typography>
-            <Typography variant="caption" color="text.secondary">{visibleDirect.length}</Typography>
-          </Stack>
-          <Stack spacing={1} sx={{ mb: 2 }}>
-            {visibleDirect.map((conversation) => (
-              <ConversationRow key={conversation.id} conversation={conversation} selected={active?.id === conversation.id} onClick={() => setActiveId(conversation.id)} />
-            ))}
-            {!visibleDirect.length && <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>No users found</Typography>}
-          </Stack>
+          {hasSearch && (
+            <>
+              <Stack direction="row" justifyContent="space-between" sx={{ px: 0.5, mb: 1 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 900, color: "text.secondary", letterSpacing: 2 }}>DIRECT MESSAGES</Typography>
+                <Typography variant="caption" color="text.secondary">{directMatches.length}</Typography>
+              </Stack>
+              <Stack spacing={1} sx={{ mb: visibleProjects.length ? 1.5 : 0 }}>
+                {visibleDirect.map((conversation) => (
+                  <ConversationRow key={conversation.id} conversation={conversation} selected={active?.id === conversation.id} onClick={() => setActiveId(conversation.id)} />
+                ))}
+                {!visibleDirect.length && <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>No users found</Typography>}
+              </Stack>
 
-          <Divider sx={{ my: 1.5 }} />
-
-          <Stack direction="row" justifyContent="space-between" sx={{ px: 0.5, mb: 1 }}>
-            <Typography sx={{ fontSize: 12, fontWeight: 900, color: "text.secondary", letterSpacing: 3 }}>PROJECT TEAMS</Typography>
-            <Typography variant="caption" color="text.secondary">{visibleProjects.length}</Typography>
-          </Stack>
-          <Stack spacing={1}>
-            {visibleProjects.map((conversation) => (
-              <ConversationRow key={conversation.id} conversation={conversation} selected={active?.id === conversation.id} onClick={() => setActiveId(conversation.id)} />
-            ))}
-            {!visibleProjects.length && <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>No projects found</Typography>}
-          </Stack>
+              {visibleProjects.length > 0 && (
+                <>
+                  <Divider sx={{ my: 1.5 }} />
+                  <Stack direction="row" justifyContent="space-between" sx={{ px: 0.5, mb: 1 }}>
+                    <Typography sx={{ fontSize: 12, fontWeight: 900, color: "text.secondary", letterSpacing: 2 }}>PROJECT TEAMS</Typography>
+                    <Typography variant="caption" color="text.secondary">{projectMatches.length}</Typography>
+                  </Stack>
+                  <Stack spacing={1}>
+                    {visibleProjects.map((conversation) => (
+                      <ConversationRow key={conversation.id} conversation={conversation} selected={active?.id === conversation.id} onClick={() => setActiveId(conversation.id)} />
+                    ))}
+                  </Stack>
+                </>
+              )}
+            </>
+          )}
         </Paper>
 
-        <Paper elevation={0} sx={{ border: "1px solid #ccebdd", borderRadius: 2, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 640, bgcolor: "#f3fff7" }}>
+        <Paper elevation={0} sx={{ border: "1px solid #dde3ea", borderRadius: "8px", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: { xs: 420, lg: 520 }, height: { lg: 520 }, bgcolor: "background.paper", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           {active ? (
             <>
-              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ px: 2.5, py: 2, bgcolor: "#e8f7e9", borderBottom: "1px solid #ccebdd" }}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ px: 2.5, py: 2, bgcolor: "background.paper", borderBottom: "1px solid #dde3ea" }}>
                 <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
-                  <Avatar sx={{ bgcolor: active.kind === "project" ? "#dcf7ff" : "#dce8ff", color: "primary.main", width: 48, height: 48 }}>
+                  <Avatar sx={{ bgcolor: "#e8f0fe", color: "primary.main", width: 48, height: 48 }}>
                     {active.kind === "project" ? <TagIcon /> : initials(active.name)}
                   </Avatar>
                   <Box sx={{ minWidth: 0 }}>
@@ -181,7 +191,7 @@ export function ManagementPage() {
                       <Typography variant="h6" fontWeight={900} noWrap>{active.name}</Typography>
                       <Chip size="small" label={active.label} color={active.kind === "project" ? "primary" : "default"} variant="outlined" />
                     </Stack>
-                    <Typography variant="body2" color="text.secondary" noWrap>{active.subtitle} · Workspace channel</Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>{active.subtitle} - Workspace channel</Typography>
                   </Box>
                 </Stack>
                 <AvatarGroup max={4}>
@@ -191,7 +201,7 @@ export function ManagementPage() {
                 </AvatarGroup>
               </Stack>
 
-              <Box sx={{ flex: 1, overflowY: "auto", p: { xs: 2, md: 3 }, bgcolor: "#f4fff7" }}>
+              <Box sx={{ flex: 1, overflowY: "auto", p: { xs: 2, md: 3 }, bgcolor: "background.default" }}>
                 <Stack spacing={2.25}>
                   {messages.isLoading && <DataState loading />}
                   {messages.error && <DataState error={messages.error} />}
@@ -205,7 +215,7 @@ export function ManagementPage() {
                 </Stack>
               </Box>
 
-              <Box sx={{ p: 2, bgcolor: "#f3fff7", borderTop: "1px solid #ccebdd" }}>
+              <Box sx={{ p: 2, bgcolor: "background.paper", borderTop: "1px solid #dde3ea" }}>
                 <TextField
                   fullWidth
                   placeholder={active.kind === "project" ? "Message the team" : `Message ${active.name}`}
@@ -232,13 +242,13 @@ export function ManagementPage() {
                       </InputAdornment>
                     )
                   }}
-                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "white" } }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: "8px", bgcolor: "#eef2f6" } }}
                 />
               </Box>
             </>
           ) : (
             <Stack alignItems="center" justifyContent="center" sx={{ flex: 1 }}>
-              <Typography color="text.secondary">Create users or projects to start chatting.</Typography>
+              <Typography color="text.secondary">No conversation selected</Typography>
             </Stack>
           )}
         </Paper>
@@ -261,13 +271,18 @@ function ConversationRow({ conversation, selected, onClick }: { conversation: Co
         alignItems: "center",
         gap: 1.5,
         p: 1.25,
-        borderRadius: 2,
+        borderRadius: "8px",
         cursor: "pointer",
-        color: selected ? "white" : "text.primary",
-        bgcolor: selected ? "primary.main" : "rgba(255,255,255,0.55)",
-        backgroundImage: selected ? "linear-gradient(90deg, #2d6cdf, #3fc6ed)" : "none",
-        boxShadow: selected ? "0 12px 24px rgba(45,108,223,0.22)" : "none",
-        border: selected ? "1px solid transparent" : "1px solid #e7eef7"
+        color: "text.primary",
+        bgcolor: selected ? "#eaf2ff" : "background.paper",
+        boxShadow: selected ? "0 1px 3px rgba(0,0,0,0.08)" : "none",
+        border: selected ? "1px solid #b7cdf8" : "1px solid #dde3ea",
+        borderLeft: selected ? "4px solid #0f62fe" : "4px solid transparent",
+        transition: "background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease",
+        "&:hover": {
+          bgcolor: selected ? "#eaf2ff" : "#f6f8fb",
+          borderColor: selected ? "#b7cdf8" : "#cfd7e2"
+        }
       }}
     >
       <Badge
@@ -277,13 +292,13 @@ function ConversationRow({ conversation, selected, onClick }: { conversation: Co
         color={conversation.kind === "direct" ? "success" : "primary"}
         badgeContent={conversation.kind === "project" ? conversation.participants.length : undefined}
       >
-        <Avatar sx={{ bgcolor: selected ? "rgba(255,255,255,0.2)" : "#e4efff", color: selected ? "white" : "primary.main" }}>
+        <Avatar sx={{ bgcolor: "#e8f0fe", color: "primary.main" }}>
           {conversation.kind === "project" ? <TagIcon /> : initials(conversation.name)}
         </Avatar>
       </Badge>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography fontWeight={800} noWrap>{conversation.name}</Typography>
-        <Typography variant="body2" color={selected ? "rgba(255,255,255,0.86)" : "text.secondary"} noWrap>{conversation.preview}</Typography>
+        <Typography variant="body2" color="text.secondary" noWrap>{conversation.preview}</Typography>
       </Box>
     </Box>
   );
@@ -292,7 +307,7 @@ function ConversationRow({ conversation, selected, onClick }: { conversation: Co
 function MessageBubble({ message, mine }: { message: ChatMessage; mine: boolean }) {
   return (
     <Stack direction="row" justifyContent={mine ? "flex-end" : "flex-start"} spacing={1.25} alignItems="flex-end">
-      {!mine && <Avatar sx={{ width: 34, height: 34, bgcolor: "#dce8ff", color: "primary.main" }}>{initials(message.sender?.name)}</Avatar>}
+      {!mine && <Avatar sx={{ width: 34, height: 34, bgcolor: "#e8f0fe", color: "primary.main" }}>{initials(message.sender?.name)}</Avatar>}
       <Box sx={{ maxWidth: { xs: "82%", md: "68%" } }}>
         {!mine && (
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
@@ -307,8 +322,8 @@ function MessageBubble({ message, mine }: { message: ChatMessage; mine: boolean 
             borderRadius: mine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
             bgcolor: mine ? "primary.main" : "white",
             color: mine ? "primary.contrastText" : "text.primary",
-            border: mine ? "none" : "1px solid #ccebdd",
-            boxShadow: "0 10px 24px rgba(44, 88, 64, 0.08)"
+            border: mine ? "none" : "1px solid #dde3ea",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
           }}
         >
           <Typography>{message.body}</Typography>
