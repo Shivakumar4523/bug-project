@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField } from "@mui/material";
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useEffect, useState } from "react";
@@ -83,7 +83,7 @@ export function TeamsPage() {
   if (teams.isLoading || users.isLoading || teams.error || users.error) return <DataState loading={teams.isLoading || users.isLoading} error={teams.error || users.error} />;
   return <>
     <PageHeader title="Teams" action="Create Team" onAction={() => setOpen(true)} />
-    <Table size="small"><TableHead><TableRow>{["Team Name", "Description", "Lead", "Members", "Actions"].map((h) => <TableCell key={h}>{h}</TableCell>)}</TableRow></TableHead><TableBody>{teams.data!.map((t) => <TableRow key={t._id}><TableCell>{t.name}</TableCell><TableCell>{t.description}</TableCell><TableCell>{entityName(t.lead, users.data!)}</TableCell><TableCell>{t.members?.length ?? 0}</TableCell><TableCell><IconButton color="primary" aria-label="Edit team" onClick={() => setEditingTeam(t)}><EditIcon /></IconButton><IconButton color="error" aria-label="Delete team" onClick={() => remove.mutate(t._id)}><DeleteIcon /></IconButton></TableCell></TableRow>)}</TableBody></Table>
+    <TableContainer sx={{ overflowX: "auto" }}><Table size="small"><TableHead><TableRow>{["Team Name", "Description", "Lead", "Members", "Actions"].map((h) => <TableCell key={h}>{h}</TableCell>)}</TableRow></TableHead><TableBody>{teams.data!.map((t) => <TableRow key={t._id}><TableCell>{t.name}</TableCell><TableCell>{t.description}</TableCell><TableCell>{entityName(t.lead, users.data!)}</TableCell><TableCell>{t.members?.length ?? 0}</TableCell><TableCell><IconButton color="primary" aria-label="Edit team" onClick={() => setEditingTeam(t)}><EditIcon /></IconButton><IconButton color="error" aria-label="Delete team" onClick={() => remove.mutate(t._id)}><DeleteIcon /></IconButton></TableCell></TableRow>)}</TableBody></Table></TableContainer>
     <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm"><DialogTitle>Create Team</DialogTitle><DialogContent><TeamForm users={users.data!} onCancel={() => setOpen(false)} onSubmit={(data) => create.mutate(data)} /></DialogContent></Dialog>
     <Dialog open={Boolean(editingTeam)} onClose={() => setEditingTeam(null)} fullWidth maxWidth="sm"><DialogTitle>Edit Team</DialogTitle><DialogContent><TeamForm team={editingTeam} users={users.data!} onCancel={() => setEditingTeam(null)} onSubmit={(data) => update.mutate({ id: editingTeam!._id, data })} /></DialogContent></Dialog>
   </>;

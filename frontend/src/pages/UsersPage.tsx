@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, IconButton, InputAdornment, MenuItem, Stack, Switch, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, Divider, FormControlLabel, IconButton, InputAdornment, MenuItem, Stack, Switch, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -216,10 +216,10 @@ export function UsersPage() {
         sx={{ mb: 2, maxWidth: 420, width: "100%" }}
         InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon color="action" /></InputAdornment> }}
       />
-      <Table size="small"><TableHead><TableRow>{["Name", "Email", "Role", "SMTP", "Disabled", "Actions"].map((h) => <TableCell key={h}>{h}</TableCell>)}</TableRow></TableHead><TableBody>{filteredUsers.map((u) => {
+      <TableContainer sx={{ overflowX: "auto" }}><Table size="small"><TableHead><TableRow>{["Name", "Email", "Role", "SMTP", "Disabled", "Actions"].map((h) => <TableCell key={h}>{h}</TableCell>)}</TableRow></TableHead><TableBody>{filteredUsers.map((u) => {
         const userId = (u._id ?? u.id)!;
         return <TableRow key={userId}><TableCell>{u.name}</TableCell><TableCell>{u.email}</TableCell><TableCell>{u.role}</TableCell><TableCell><Chip size="small" label={u.smtpConfigured ? "Configured" : "Default"} color={u.smtpConfigured ? "success" : "default"} /></TableCell><TableCell><Switch checked={Boolean(u.disabled)} onChange={(e) => update.mutate({ id: userId, data: { disabled: e.target.checked } })} /></TableCell><TableCell><IconButton color="primary" aria-label="Edit user" onClick={() => setEditingUser(u)}><EditIcon /></IconButton><IconButton color="error" aria-label="Delete user" onClick={() => remove.mutate(userId)}><DeleteIcon /></IconButton></TableCell></TableRow>;
-      })}</TableBody></Table>
+      })}</TableBody></Table></TableContainer>
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} fullWidth maxWidth="sm"><DialogTitle>Create User</DialogTitle><DialogContent><UserForm onCancel={() => setCreateOpen(false)} onSubmit={(data) => create.mutate(data)} /></DialogContent></Dialog>
       <Dialog open={Boolean(editingUser)} onClose={() => setEditingUser(null)} fullWidth maxWidth="sm"><DialogTitle>Edit User</DialogTitle><DialogContent><UserForm user={editingUser} onCancel={() => setEditingUser(null)} onSubmit={(data) => update.mutate({ id: (editingUser!._id ?? editingUser!.id)!, data })} /></DialogContent></Dialog>
       <Dialog open={importOpen} onClose={closeImportDialog} fullWidth maxWidth="sm">

@@ -19,6 +19,30 @@ export const theme = createTheme({
   },
   components: {
     MuiButton: { styleOverrides: { root: { borderRadius: 6 } } },
-    MuiCard: { styleOverrides: { root: { borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" } } }
+    MuiCard: { styleOverrides: { root: { borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" } } },
+    MuiTextField: {
+      defaultProps: { size: "small", variant: "outlined" },
+      styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-root": {
+            borderRadius: 6,
+          }
+        }
+      }
+    },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: 6,
+        }
+      }
+    },
+    MuiSelect: {
+      styleOverrides: {
+        outlined: {
+          borderRadius: 6,
+        }
+      }
+    }
   }
 });

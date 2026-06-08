@@ -79,41 +79,14 @@ export function IssueForm({
             <TextField select label="Issue Type" {...register("type")}>{["Bug", "Task", "Story", "Improvement"].map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>
             <TextField
               select
+              label="Category"
               error={Boolean(errors.category)}
               helperText={errors.category ? "Select category" : undefined}
               {...register("category", { required: true })}
-              inputProps={{ "aria-label": "Category" }}
-              SelectProps={{
-                displayEmpty: true,
-                MenuProps: {
-                  PaperProps: {
-                    sx: {
-                      borderRadius: 0,
-                      mt: 0.5,
-                      "& .MuiMenuItem-root": { fontSize: 20, py: 0.75, px: 3 }
-                    }
-                  }
-                }
-              }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  borderRadius: "22px",
-                  backgroundColor: "#fff",
-                  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                    borderColor: "#7eb0ff",
-                    borderWidth: 2,
-                    boxShadow: "0 0 0 2px rgba(15, 98, 254, 0.16)"
-                  }
-                },
-                "& .MuiSelect-select": {
-                  fontSize: 20,
-                  py: 1.25,
-                  px: 2.5
-                }
-              }}
+              SelectProps={{ displayEmpty: true }}
             >
-              <MenuItem value="" sx={{ fontSize: 20 }}>Select category</MenuItem>
-              {categories.map((category) => <MenuItem key={category} value={category} sx={{ fontSize: 20 }}>{category}</MenuItem>)}
+              <MenuItem value="">Select category</MenuItem>
+              {categories.map((category) => <MenuItem key={category} value={category}>{category}</MenuItem>)}
             </TextField>
             <TextField select label="Project" {...register("project")}>{projects.map((p) => <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>)}</TextField>
             {canSetAssignee && <TextField select label="Assignee" {...register("assignee")}><MenuItem value="">Unassigned</MenuItem>{availableAssignees.length > 0 ? availableAssignees.map((u) => <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>{u.name}</MenuItem>) : <MenuItem disabled>No members in this project</MenuItem>}</TextField>}
