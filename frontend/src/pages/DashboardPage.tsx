@@ -51,7 +51,35 @@ export function DashboardPage() {
           <Card><CardContent><Typography variant="h6">Team Performance</Typography><Box sx={{ height: 240 }}><ResponsiveContainer><BarChart data={statusData}><XAxis dataKey="name" /><YAxis allowDecimals={false} /><Tooltip /><Bar dataKey="value" fill="#24a148" /></BarChart></ResponsiveContainer></Box></CardContent></Card>
         </Grid>
         <Grid size={{ xs: 12, md: 7 }}>
-          <Card><CardContent><Typography variant="h6" sx={{ mb: 1 }}>Recent Issues</Typography><Table size="small"><TableHead><TableRow>{["ID", "Title", "Project", "Category", "Status", "Priority", "Assignee", "Updated", "Actions"].map((h) => <TableCell key={h}>{h}</TableCell>)}</TableRow></TableHead><TableBody>{issues.data!.slice(0, 8).map((issue) => <TableRow key={issue._id}><TableCell>{issue.issueNumber}</TableCell><TableCell>{issue.title}</TableCell><TableCell>{issue.project?.key}</TableCell><TableCell>{issue.category}</TableCell><TableCell><Chip size="small" label={issueStatusLabel(issue.status, me?.role)} /></TableCell><TableCell>{issue.priority}</TableCell><TableCell>{issue.assignee?.name ?? "Unassigned"}</TableCell><TableCell>{new Date(issue.updatedAt).toLocaleDateString()}</TableCell><TableCell><IconButton size="small"><MoreHorizIcon /></IconButton></TableCell></TableRow>)}</TableBody></Table></CardContent></Card>
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 1 }}>Recent Issues</Typography>
+              <Box sx={{ overflowX: "auto" }}>
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>{["ID", "Title", "Project", "Category", "Status", "Priority", "Assignee", "Updated", "Actions"].map((h) => <TableCell key={h} sx={{ whiteSpace: "nowrap", fontWeight: 800 }}>{h}</TableCell>)}</TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {issues.data!.slice(0, 8).map((issue) => (
+                      <TableRow key={issue._id}>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.issueNumber}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.title}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.project?.key}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.category}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}><Chip size="small" label={issueStatusLabel(issue.status, me?.role)} /></TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.priority}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>{issue.assignee?.name ?? "Unassigned"}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>{new Date(issue.updatedAt).toLocaleDateString()}</TableCell>
+                        <TableCell sx={{ whiteSpace: "nowrap" }}>
+                          <IconButton size="small"><MoreHorizIcon /></IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
     </>
