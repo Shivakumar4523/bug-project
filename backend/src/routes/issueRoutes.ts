@@ -6,6 +6,7 @@ import { upload } from "../middleware/upload.js";
 export const issueRoutes = Router();
 issueRoutes.use(authenticate);
 issueRoutes.get("/", issueController.list);
+issueRoutes.get("/bucket", issueController.bugBucket);
 issueRoutes.get("/:id", issueController.get);
 issueRoutes.post("/", authorize("Admin", "Tester"), issueController.create);
 issueRoutes.put("/:id", issueController.update);

@@ -65,7 +65,7 @@ function isWatching(issue: Issue, id?: string) {
   return issue.watchers?.some((watcher) => (typeof watcher === "string" ? watcher : watcher._id ?? watcher.id) === id) ?? false;
 }
 
-export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
+export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" | "bucket" }) {
   const qc = useQueryClient();
   const me = currentUser<User>();
   const meId = userId(me);
@@ -73,7 +73,7 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
   const [editing, setEditing] = useState<Issue | null>(null);
   const [selected, setSelected] = useState<Issue | null>(null);
   const [statusMenu, setStatusMenu] = useState<{ anchorEl: HTMLElement; issue: Issue } | null>(null);
-  const issues = useQuery({ queryKey: ["issues", scope], queryFn: () => api<Issue[]>("/issues") });
+  const issues = useQuery({ queryKey: ["issues", scope], queryFn: () => api<Issue[]>(scope === "bucket" ? "/issues/bucket" : "/issues") });
   const projects = useQuery({ queryKey: ["projects"], queryFn: () => crud.list<Project>("projects") });
   const users = useQuery({ queryKey: ["users"], queryFn: () => crud.list<User>("users") });
   const create = useMutation({
@@ -127,13 +127,15 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
     return true;
   });
 
+  const pageTitle = scope === "mine" ? "My Issues" : scope === "watchlist" ? "Watchlist" : scope === "bucket" ? "Bug Bucket" : "Issues";
+
   const openStatusMenu = (event: MouseEvent<HTMLElement>, issue: Issue) => {
     setStatusMenu({ anchorEl: event.currentTarget, issue });
   };
 
   return (
     <>
-      <PageHeader title={scope === "mine" ? "My Issues" : scope === "watchlist" ? "Watchlist" : "Issues"} action={canCreate ? createActionLabel : undefined} onAction={canCreate ? () => setCreateOpen(true) : undefined} />
+      <PageHeader title={pageTitle} action={canCreate ? createActionLabel : undefined} onAction={canCreate ? () => setCreateOpen(true) : undefined} />
       <TableContainer sx={{ maxWidth: "100%", overflowX: "auto", pb: 1 }}>
         <Table
           size="small"
@@ -158,7 +160,7 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
                   <TableCell sx={wrappingCellSx}>{issue.issueNumber}</TableCell>
                   <TableCell sx={wrappingCellSx}>
                     <Tooltip title={issue.description || "No description provided"} arrow>
-                      <Box sx={{ cursor: "pointer", textDecoration: "underline" }}>{issue.title}</Box>
+                      <Box sx={{ cursor: "pointer", textDecoration: "underline" }} onClick={() => setSelected(issue)}>{issue.title}</Box>
                     </Tooltip>
                   </TableCell>
                   <TableCell sx={wrappingCellSx}>{issue.project?.name}</TableCell>

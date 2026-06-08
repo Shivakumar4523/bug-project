@@ -15,6 +15,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import SearchIcon from "@mui/icons-material/Search";
 import ViewKanbanIcon from "@mui/icons-material/ViewKanban";
+import InboxIcon from "@mui/icons-material/Inbox";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { AUTH_EXPIRED_EVENT, api, clearSession, currentUser, setCurrentUser } from "../api/client";
@@ -29,6 +30,7 @@ const sections: { label: string; items: { text: string; icon: ReactNode; to: str
   { label: "TRACKING", items: [
     { text: "Issues", icon: <BugReportIcon />, to: "/issues" },
     { text: "Kanban", icon: <ViewKanbanIcon />, to: "/kanban" },
+    { text: "Bug Bucket", icon: <InboxIcon />, to: "/bug-bucket" },
     { text: "My Issues", icon: <AssignmentIndIcon />, to: "/my-issues" },
     { text: "Watchlist", icon: <VisibilityIcon />, to: "/watchlist" },
     { text: "Reports", icon: <AssessmentIcon />, to: "/reports", roles: ["Admin"] }

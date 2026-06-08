@@ -2,6 +2,7 @@ import type { RequestHandler } from "express";
 import { Issue } from "../models/Issue.js";
 import { Comment } from "../models/Comment.js";
 import { Notification } from "../models/Notification.js";
+import { Project } from "../models/Project.js";
 import { issueService, cleanupOldNotifications } from "../services/issueService.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { logActivity } from "../services/activityService.js";
@@ -27,6 +28,21 @@ export const issueController = {
       if (req.query[key]) (filter as Record<string, unknown>)[key] = req.query[key];
     }
     const issues = await Issue.find(await visibleIssueFilter(req.user!, filter)).populate(populate).sort({ updatedAt: -1 });
+    res.json(issues);
+  }) as RequestHandler,
+  bugBucket: (async (req, res) => {
+    const user = req.user!;
+    let bucketFilter: IssueFilter = { status: "BUG_BUCKET" };
+
+    if (user.role === "Developer") {
+      const projectIds = await Project.find({ members: user.id }).distinct("_id");
+      bucketFilter = { status: "BUG_BUCKET", project: { $in: projectIds } };
+    } else if (user.role === "Tester") {
+      bucketFilter = { status: "BUG_BUCKET", reporter: user.id };
+    }
+    // Admin: sees all BUG_BUCKET issues (no extra filter)
+
+    const issues = await Issue.find(bucketFilter).populate(populate).sort({ updatedAt: -1 });
     res.json(issues);
   }) as RequestHandler,
   get: (async (req, res) => {
