@@ -362,7 +362,7 @@ function MessageBubble({ message, mine }: { message: ChatMessage; mine: boolean 
             px: 2,
             py: 1.25,
             borderRadius: mine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-            bgcolor: mine ? "primary.main" : "white",
+            bgcolor: mine ? "#161616" : "white",
             color: mine ? "primary.contrastText" : "text.primary",
             border: mine ? "none" : "1px solid #dde3ea",
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
