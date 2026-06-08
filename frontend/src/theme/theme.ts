@@ -18,6 +18,13 @@ export const theme = createTheme({
     button: { textTransform: "none", fontWeight: 700 }
   },
   components: {
+    MuiDialogContent: {
+      styleOverrides: {
+        root: {
+          paddingTop: "12px !important"
+        }
+      }
+    },
     MuiButton: { styleOverrides: { root: { borderRadius: 6 } } },
     MuiCard: { styleOverrides: { root: { borderRadius: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" } } },
     MuiTextField: {
