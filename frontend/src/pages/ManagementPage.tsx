@@ -31,6 +31,14 @@ type ChatMessage = {
   createdAt: string;
 };
 
+type ChatHistoryItem = {
+  id: string;
+  kind: Conversation["kind"];
+  targetId: string;
+  preview: string;
+  updatedAt: string;
+};
+
 function entityId(entity?: { _id?: string; id?: string } | string | null) {
   if (!entity) return "";
   return typeof entity === "string" ? entity : entity._id ?? entity.id ?? "";
@@ -57,10 +65,10 @@ function conversationsFrom(users: User[], projects: Project[], currentUserId: st
       kind: "direct" as const,
       targetId: entityId(user),
       name: user.name,
-      subtitle: user.role,
+      subtitle: user.email,
       label: "direct",
       participants: [user],
-      preview: user.department || user.email
+      preview: ""
     }));
 
   const projectChannels = projects.map((project) => {
@@ -89,10 +97,23 @@ export function ManagementPage() {
   const currentUserId = entityId(me);
   const users = useQuery({ queryKey: ["users"], queryFn: () => crud.list<User>("users") });
   const projects = useQuery({ queryKey: ["projects"], queryFn: () => crud.list<Project>("projects") });
+  const chatHistory = useQuery({ queryKey: ["management-chat-history"], queryFn: () => api<ChatHistoryItem[]>("/chats/history") });
 
   const conversations = useMemo(
     () => conversationsFrom(users.data ?? [], projects.data ?? [], currentUserId),
     [currentUserId, projects.data, users.data]
+  );
+  const conversationsById = useMemo(() => new Map(conversations.map((conversation) => [conversation.id, conversation])), [conversations]);
+  const historyConversations = useMemo(
+    () =>
+      (chatHistory.data ?? [])
+        .map((item) => {
+          const conversation = conversationsById.get(item.id);
+          return conversation ? { ...conversation, preview: item.preview } : undefined;
+        })
+        .filter((conversation): conversation is Conversation => Boolean(conversation))
+        .slice(0, 5),
+    [chatHistory.data, conversationsById]
   );
   const query = search.trim().toLowerCase();
   const hasSearch = query.length > 0;
@@ -114,6 +135,7 @@ export function ManagementPage() {
     onSuccess: () => {
       setDraft("");
       qc.invalidateQueries({ queryKey: ["management-chat", active?.id] });
+      qc.invalidateQueries({ queryKey: ["management-chat-history"] });
     }
   });
 
@@ -134,7 +156,7 @@ export function ManagementPage() {
         <Paper elevation={0} sx={{ border: "1px solid #dde3ea", borderRadius: "8px", p: 2, bgcolor: "background.paper", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
           <Typography sx={{ fontSize: 12, fontWeight: 800, color: "text.secondary", letterSpacing: 1.8 }}>REALTIME</Typography>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-            <ChatBubbleOutlineIcon color="primary" />
+            <ChatBubbleOutlineIcon sx={{ color: "text.primary" }} />
             <Typography variant="h5" fontWeight={900}>Chat</Typography>
           </Stack>
           <TextField
@@ -176,6 +198,24 @@ export function ManagementPage() {
               )}
             </>
           )}
+          {!hasSearch && (
+            <>
+              <Stack direction="row" justifyContent="space-between" sx={{ px: 0.5, mb: 1 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 900, color: "text.secondary", letterSpacing: 2 }}>CHAT HISTORY</Typography>
+                <Typography variant="caption" color="text.secondary">{historyConversations.length}</Typography>
+              </Stack>
+              <Stack spacing={1}>
+                {chatHistory.isLoading && <DataState loading />}
+                {chatHistory.error && <DataState error={chatHistory.error} />}
+                {!chatHistory.isLoading && !chatHistory.error && historyConversations.map((conversation) => (
+                  <ConversationRow key={conversation.id} conversation={conversation} selected={active?.id === conversation.id} onClick={() => setActiveId(conversation.id)} />
+                ))}
+                {!chatHistory.isLoading && !chatHistory.error && !historyConversations.length && (
+                  <Typography variant="body2" color="text.secondary" sx={{ px: 1 }}>Search a user to start chat</Typography>
+                )}
+              </Stack>
+            </>
+          )}
         </Paper>
 
         <Paper elevation={0} sx={{ border: "1px solid #dde3ea", borderRadius: "8px", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: { xs: 420, lg: 520 }, height: { lg: 520 }, bgcolor: "background.paper", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
@@ -183,7 +223,7 @@ export function ManagementPage() {
             <>
               <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ px: 2.5, py: 2, bgcolor: "background.paper", borderBottom: "1px solid #dde3ea" }}>
                 <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
-                  <Avatar sx={{ bgcolor: "#e8f0fe", color: "primary.main", width: 48, height: 48 }}>
+                  <Avatar sx={{ bgcolor: "#eef2f6", color: "text.primary", width: 48, height: 48 }}>
                     {active.kind === "project" ? <TagIcon /> : initials(active.name)}
                   </Avatar>
                   <Box sx={{ minWidth: 0 }}>
@@ -191,7 +231,9 @@ export function ManagementPage() {
                       <Typography variant="h6" fontWeight={900} noWrap>{active.name}</Typography>
                       <Chip size="small" label={active.label} color={active.kind === "project" ? "primary" : "default"} variant="outlined" />
                     </Stack>
-                    <Typography variant="body2" color="text.secondary" noWrap>{active.subtitle} - Workspace channel</Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {active.kind === "project" ? `${active.subtitle} - Workspace channel` : active.subtitle}
+                    </Typography>
                   </Box>
                 </Stack>
                 <AvatarGroup max={4}>
@@ -292,13 +334,13 @@ function ConversationRow({ conversation, selected, onClick }: { conversation: Co
         color={conversation.kind === "direct" ? "success" : "primary"}
         badgeContent={conversation.kind === "project" ? conversation.participants.length : undefined}
       >
-        <Avatar sx={{ bgcolor: "#e8f0fe", color: "primary.main" }}>
+        <Avatar sx={{ bgcolor: "#eef2f6", color: "text.primary" }}>
           {conversation.kind === "project" ? <TagIcon /> : initials(conversation.name)}
         </Avatar>
       </Badge>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography fontWeight={800} noWrap>{conversation.name}</Typography>
-        <Typography variant="body2" color="text.secondary" noWrap>{conversation.preview}</Typography>
+        {conversation.preview && <Typography variant="body2" color="text.secondary" noWrap>{conversation.preview}</Typography>}
       </Box>
     </Box>
   );
@@ -307,7 +349,7 @@ function ConversationRow({ conversation, selected, onClick }: { conversation: Co
 function MessageBubble({ message, mine }: { message: ChatMessage; mine: boolean }) {
   return (
     <Stack direction="row" justifyContent={mine ? "flex-end" : "flex-start"} spacing={1.25} alignItems="flex-end">
-      {!mine && <Avatar sx={{ width: 34, height: 34, bgcolor: "#e8f0fe", color: "primary.main" }}>{initials(message.sender?.name)}</Avatar>}
+      {!mine && <Avatar sx={{ width: 34, height: 34, bgcolor: "#eef2f6", color: "text.primary" }}>{initials(message.sender?.name)}</Avatar>}
       <Box sx={{ maxWidth: { xs: "82%", md: "68%" } }}>
         {!mine && (
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>

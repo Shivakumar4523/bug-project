@@ -10,6 +10,12 @@ import { AppError } from "../middleware/errorHandler.js";
 export const chatRoutes = Router();
 chatRoutes.use(authenticate);
 
+type HistoryAggregate = {
+  _id: mongoose.Types.ObjectId;
+  body: string;
+  createdAt: Date;
+};
+
 function requireObjectId(value: unknown, label: string) {
   if (typeof value !== "string") throw new AppError(400, `${label} is invalid`);
   if (!mongoose.Types.ObjectId.isValid(value)) throw new AppError(400, `${label} is invalid`);
@@ -35,6 +41,67 @@ async function findMessage(id: mongoose.Types.ObjectId) {
     .populate("recipient", "name email role profileImage")
     .populate("project", "name key");
 }
+
+chatRoutes.get("/history", (async (req, res) => {
+  const currentUserId = new mongoose.Types.ObjectId(req.user!.id);
+
+  const directMessages = await ChatMessage.aggregate<HistoryAggregate>([
+    {
+      $match: {
+        scope: "Direct",
+        $or: [{ sender: currentUserId }, { recipient: currentUserId }]
+      }
+    },
+    { $sort: { createdAt: -1 } },
+    {
+      $addFields: {
+        conversationUser: {
+          $cond: [{ $eq: ["$sender", currentUserId] }, "$recipient", "$sender"]
+        }
+      }
+    },
+    {
+      $group: {
+        _id: "$conversationUser",
+        body: { $first: "$body" },
+        createdAt: { $first: "$createdAt" }
+      }
+    },
+    { $limit: 20 }
+  ]);
+
+  const projectMessages = await ChatMessage.aggregate<HistoryAggregate>([
+    { $match: { scope: "Project", project: { $exists: true, $ne: null } } },
+    { $sort: { createdAt: -1 } },
+    {
+      $group: {
+        _id: "$project",
+        body: { $first: "$body" },
+        createdAt: { $first: "$createdAt" }
+      }
+    },
+    { $limit: 20 }
+  ]);
+
+  const history = [
+    ...directMessages.map((message) => ({
+      id: `direct:${message._id.toString()}`,
+      kind: "direct",
+      targetId: message._id.toString(),
+      preview: message.body,
+      updatedAt: message.createdAt.toISOString()
+    })),
+    ...projectMessages.map((message) => ({
+      id: `project:${message._id.toString()}`,
+      kind: "project",
+      targetId: message._id.toString(),
+      preview: message.body,
+      updatedAt: message.createdAt.toISOString()
+    }))
+  ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+  res.json(history.slice(0, 20));
+}) as RequestHandler);
 
 chatRoutes.get("/direct/:userId", (async (req, res) => {
   const userId = requireObjectId(req.params.userId, "User");

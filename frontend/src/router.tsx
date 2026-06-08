@@ -34,7 +34,7 @@ export const router = createBrowserRouter([
       { path: "my-issues", element: <IssuesPage scope="mine" /> },
       { path: "watchlist", element: <IssuesPage scope="watchlist" /> },
       { path: "kanban", element: <KanbanPage /> },
-      { path: "management", element: <AdminOnly><ManagementPage /></AdminOnly> },
+      { path: "management", element: <ManagementPage /> },
       { path: "projects", element: <AdminOnly><ProjectsPage /></AdminOnly> },
       { path: "milestones", element: <AdminOnly><SettingsPage resource="milestones" title="Milestones" /></AdminOnly> },
       { path: "teams", element: <AdminOnly><TeamsPage /></AdminOnly> },
