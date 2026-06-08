@@ -4,8 +4,25 @@ import { env } from "../config/env.js";
 import { roles, User } from "../models/User.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { logActivity } from "../services/activityService.js";
-function sanitize(user) {
+import { encryptSecret } from "../utils/secretCrypto.js";
+function smtpConfigured(smtp) {
+    return Boolean(smtp?.enabled && smtp.host && smtp.user && smtp.passEncrypted);
+}
+function publicSmtp(user) {
+    const smtp = user.smtp ?? {};
     return {
+        enabled: Boolean(smtp.enabled),
+        host: smtp.host ?? "",
+        port: Number(smtp.port ?? 587),
+        secure: Boolean(smtp.secure),
+        user: smtp.user ?? "",
+        fromName: smtp.fromName ?? "",
+        hasPassword: Boolean(smtp.passEncrypted),
+        configured: smtpConfigured(smtp)
+    };
+}
+function sanitize(user, options = {}) {
+    const data = {
         _id: user._id,
         name: user.name,
         email: user.email,
@@ -13,9 +30,56 @@ function sanitize(user) {
         department: user.department,
         profileImage: user.profileImage,
         disabled: user.disabled,
+        smtpConfigured: smtpConfigured(user.smtp),
         createdAt: user.createdAt,
         updatedAt: user.updatedAt
     };
+    if (options.includeSmtp)
+        data.smtp = publicSmtp(user);
+    return data;
+}
+function normalizeSmtpPort(value) {
+    if (value === undefined || value === null || value === "" || (typeof value === "number" && Number.isNaN(value)))
+        return 587;
+    const port = Number(value ?? 587);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+        throw new AppError(400, "SMTP port must be between 1 and 65535");
+    }
+    return port;
+}
+function trimString(value) {
+    return typeof value === "string" ? value.trim() : "";
+}
+function applySmtpConfig(user, input) {
+    if (!input || typeof input !== "object")
+        return;
+    const data = input;
+    user.smtp ??= {};
+    if ("enabled" in data)
+        user.smtp.enabled = Boolean(data.enabled);
+    if ("host" in data)
+        user.smtp.host = trimString(data.host);
+    if ("port" in data)
+        user.smtp.port = normalizeSmtpPort(data.port);
+    if ("secure" in data)
+        user.smtp.secure = Boolean(data.secure);
+    if ("user" in data)
+        user.smtp.user = trimString(data.user);
+    if ("fromName" in data)
+        user.smtp.fromName = trimString(data.fromName);
+    if ("password" in data && typeof data.password === "string" && data.password.length > 0) {
+        user.smtp.passEncrypted = encryptSecret(data.password);
+    }
+    user.smtp.port ||= 587;
+    if (user.smtp.enabled && (!user.smtp.host || !user.smtp.user || !user.smtp.passEncrypted)) {
+        throw new AppError(400, "SMTP host, username, and password are required when SMTP sender is enabled");
+    }
+}
+function applyUserFields(user, data) {
+    for (const field of ["name", "email", "role", "department", "profileImage", "disabled"]) {
+        if (field in data)
+            user[field] = data[field];
+    }
 }
 function normalizeKey(value) {
     return value.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -92,21 +156,29 @@ async function parseUserRows(file) {
     return { parsed, errors };
 }
 export const userController = {
-    list: (async (_req, res) => {
+    list: (async (req, res) => {
         const users = await User.find().sort({ name: 1 });
-        res.json(users.map(sanitize));
+        res.json(users.map((user) => sanitize(user, { includeSmtp: req.user?.role === "Admin" })));
+    }),
+    me: (async (req, res) => {
+        const user = await User.findById(req.user.id);
+        if (!user)
+            throw new AppError(404, "User not found");
+        res.json(sanitize(user, { includeSmtp: true }));
     }),
     get: (async (req, res) => {
         const user = await User.findById(req.params.id);
         if (!user)
             throw new AppError(404, "User not found");
-        res.json(sanitize(user));
+        res.json(sanitize(user, { includeSmtp: req.user?.role === "Admin" || req.user?.id === user._id.toString() }));
     }),
     create: (async (req, res) => {
-        const { password = env.adminPassword, ...data } = req.body;
-        const user = await User.create({ ...data, passwordHash: await bcrypt.hash(password, 12) });
+        const { password = env.adminPassword, smtp, ...data } = req.body;
+        const user = new User({ ...data, passwordHash: await bcrypt.hash(password, 12) });
+        applySmtpConfig(user, smtp);
+        await user.save();
         await logActivity(req.user?.id, "User Created", "User", user._id.toString());
-        res.status(201).json(sanitize(user));
+        res.status(201).json(sanitize(user, { includeSmtp: true }));
     }),
     importExcel: (async (req, res) => {
         if (!req.file)
@@ -145,14 +217,27 @@ export const userController = {
             users: importedUsers
         });
     }),
-    update: (async (req, res) => {
-        const { password, ...data } = req.body;
-        const update = password ? { ...data, passwordHash: await bcrypt.hash(password, 12) } : data;
-        const user = await User.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
+    updateOwnSmtp: (async (req, res) => {
+        const user = await User.findById(req.user.id);
         if (!user)
             throw new AppError(404, "User not found");
+        applySmtpConfig(user, req.body.smtp ?? req.body);
+        await user.save();
+        await logActivity(req.user?.id, "SMTP Settings Updated", "User", user._id.toString());
+        res.json(sanitize(user, { includeSmtp: true }));
+    }),
+    update: (async (req, res) => {
+        const { password, smtp, ...data } = req.body;
+        const user = await User.findById(req.params.id);
+        if (!user)
+            throw new AppError(404, "User not found");
+        applyUserFields(user, data);
+        if (password)
+            user.passwordHash = await bcrypt.hash(password, 12);
+        applySmtpConfig(user, smtp);
+        await user.save();
         await logActivity(req.user?.id, password ? "Password Reset" : "User Updated", "User", user._id.toString());
-        res.json(sanitize(user));
+        res.json(sanitize(user, { includeSmtp: true }));
     }),
     remove: (async (req, res) => {
         await User.findByIdAndDelete(req.params.id);

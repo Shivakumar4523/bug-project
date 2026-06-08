@@ -1,7 +1,7 @@
 import { Issue } from "../models/Issue.js";
 import { Comment } from "../models/Comment.js";
 import { Notification } from "../models/Notification.js";
-import { issueService } from "../services/issueService.js";
+import { issueService, cleanupOldNotifications } from "../services/issueService.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { logActivity } from "../services/activityService.js";
 const populate = [
@@ -51,6 +51,7 @@ export const issueController = {
         if (issue) {
             for (const watcher of issue.watchers) {
                 await Notification.create({ user: watcher, title: "Comment Added", message: issue.title, type: "Comment Added", entity: issue._id });
+                await cleanupOldNotifications(watcher.toString());
             }
         }
         await logActivity(req.user?.id, "Comment Added", "Issue", String(req.params.id));

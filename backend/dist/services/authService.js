@@ -68,12 +68,18 @@ export const authService = {
     },
     async forgotPassword(email) {
         const user = await User.findOne({ email: email.toLowerCase() });
-        if (!user)
+        if (!user) {
+            console.log("Password reset requested for unknown email:", email);
             return;
+        }
         const token = crypto.randomBytes(32).toString("hex");
         user.resetTokenHash = await bcrypt.hash(token, 12);
         user.resetTokenExpiresAt = new Date(Date.now() + 1000 * 60 * 30);
         await user.save();
+        console.log("PASSWORD RESET TOKEN");
+        console.log("User:", user.email);
+        console.log("Token:", token);
+        console.log("Expires:", user.resetTokenExpiresAt);
         await mailService.send(user.email, "PIRNAV password reset", `<p>Use this reset token:</p><code>${token}</code>`);
     },
     async resetPassword(token, password) {

@@ -3,11 +3,19 @@ export class BaseRepository {
     constructor(model) {
         this.model = model;
     }
-    findAll(filter = {}) {
-        return this.model.find(filter).sort({ updatedAt: -1 });
+    findAll(filter = {}, populate) {
+        let query = this.model.find(filter).sort({ updatedAt: -1 });
+        if (populate) {
+            query = query.populate(populate);
+        }
+        return query;
     }
-    findById(id) {
-        return this.model.findById(id);
+    findById(id, populate) {
+        let query = this.model.findById(id);
+        if (populate) {
+            query = query.populate(populate);
+        }
+        return query;
     }
     create(data) {
         return this.model.create(data);

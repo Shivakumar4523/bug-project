@@ -3,11 +3,12 @@ import { logActivity } from "../services/activityService.js";
 import { AppError } from "../middleware/errorHandler.js";
 export function crudController(model, entityType) {
     const repo = new BaseRepository(model);
+    const shouldPopulateMembers = entityType === "Project";
     return {
-        list: (async (_req, res) => res.json(await repo.findAll())),
+        list: (async (_req, res) => res.json(await repo.findAll({}, shouldPopulateMembers ? "members" : undefined))),
         get: (async (req, res) => {
             const id = String(req.params.id);
-            const item = await repo.findById(id);
+            const item = await repo.findById(id, shouldPopulateMembers ? "members" : undefined);
             if (!item)
                 throw new AppError(404, `${entityType} not found`);
             res.json(item);

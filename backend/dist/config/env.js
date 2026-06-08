@@ -13,7 +13,9 @@ export const env = {
     smtp: {
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT ?? 587),
+        secure: process.env.SMTP_SECURE === "true",
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS
-    }
+    },
+    smtpEncryptionSecret: process.env.SMTP_ENCRYPTION_SECRET ?? process.env.JWT_REFRESH_SECRET ?? process.env.JWT_ACCESS_SECRET ?? "dev_smtp_secret"
 };
