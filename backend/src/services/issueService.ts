@@ -31,6 +31,7 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
+<<<<<<< HEAD
 function senderOptions(sender: Express.User) {
   return {
     senderUserId: sender.id,
@@ -39,6 +40,8 @@ function senderOptions(sender: Express.User) {
   };
 }
 
+=======
+>>>>>>> e5028d6938aab3cf6ac69a8cc5e6a918a65fb954
 async function notifyAssignee(
   assignee: string | undefined,
   issueId: string,
@@ -57,6 +60,7 @@ async function notifyAssignee(
     type: "Issue Assigned",
     entity: issueId
   });
+<<<<<<< HEAD
   emitNotification(assignee, notification);
   await cleanupOldNotifications(assignee);
 
@@ -96,6 +100,28 @@ async function notifyUsers(
   type: "Issue Created" | "Issue Assigned" | "Status Changed" | "Comment Added",
   issueId: string
 ) {
+=======
+
+  emitNotification(assignee, notification);
+  await cleanupOldNotifications(assignee);
+
+  if (options.sendEmail !== false) {
+    await mailService.send(
+      user.email,
+      "PIRNAV issue assigned",
+      `<p>You were assigned: <strong>${escapeHtml(title)}</strong></p>`,
+      options.sender
+        ? {
+            senderUserId: options.sender.id,
+            fromName: `${options.sender.name} via PIRNAV`,
+            replyTo: options.sender.email
+          }
+        : {}
+    );
+  }
+}
+async function notifyUsers(filter: Record<string, unknown>, title: string, message: string, type: "Issue Created" | "Issue Assigned" | "Status Changed" | "Comment Added", issueId: string) {
+>>>>>>> e5028d6938aab3cf6ac69a8cc5e6a918a65fb954
   const users = await User.find(filter).select("_id email");
   for (const user of users) {
     const notification = await Notification.create({ user: user._id, title, message, type, entity: issueId });
@@ -124,7 +150,11 @@ async function emailDevelopersAboutTesterIssue(issue: any, reporter: Express.Use
 
   if (!developers.length) return;
 
+<<<<<<< HEAD
   const subject = `New Issue Assigned - ${issue.issueNumber}`;
+=======
+  const subject = `🐞 New Issue Assigned - ${issue.issueNumber}`;
+>>>>>>> e5028d6938aab3cf6ac69a8cc5e6a918a65fb954
 
   for (const developer of developers) {
     const html = `
@@ -175,7 +205,20 @@ async function emailDevelopersAboutTesterIssue(issue: any, reporter: Express.Use
       </div>
     `;
 
+<<<<<<< HEAD
     await mailService.send(developer.email, subject, html, senderOptions(reporter));
+=======
+    await mailService.send(
+      developer.email,
+      subject,
+      html,
+      {
+        senderUserId: reporter.id,
+        fromName: `${reporter.name} via PIRNAV`,
+        replyTo: reporter.email
+      }
+    );
+>>>>>>> e5028d6938aab3cf6ac69a8cc5e6a918a65fb954
   }
 }
 

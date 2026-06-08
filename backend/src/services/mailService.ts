@@ -54,6 +54,7 @@ function defaultSmtpSender(): SmtpSender | null {
 export const mailService = {
   async send(to: string, subject: string, html: string, options: MailOptions = {}) {
     const sender = (await userSmtpSender(options.senderUserId)) ?? defaultSmtpSender();
+
     if (!sender) {
       console.log(`[email skipped] ${to} | ${subject}`);
       return;
@@ -63,13 +64,30 @@ export const mailService = {
       host: sender.host,
       port: sender.port,
       secure: sender.secure,
+<<<<<<< HEAD
       auth: { user: sender.user, pass: sender.pass }
+=======
+      auth: {
+        user: sender.user,
+        pass: sender.pass
+      }
+>>>>>>> e5028d6938aab3cf6ac69a8cc5e6a918a65fb954
     });
 
     try {
       const fromName = options.fromName ?? sender.fromName;
       const info = await transporter.sendMail({
+<<<<<<< HEAD
         from: fromName ? { name: fromName, address: sender.user } : sender.user,
+=======
+        from:
+          options.fromName || sender.fromName
+            ? {
+                name: options.fromName ?? sender.fromName!,
+                address: sender.user
+              }
+            : sender.user,
+>>>>>>> e5028d6938aab3cf6ac69a8cc5e6a918a65fb954
         replyTo: options.replyTo,
         to,
         subject,
@@ -83,7 +101,6 @@ export const mailService = {
     }
   }
 };
-
 export const sendIssueAssignedEmail = async ({
   developerEmail,
   developerName,

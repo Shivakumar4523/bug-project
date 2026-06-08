@@ -83,12 +83,10 @@ export const authService = {
 
   await user.save();
 
-  console.log("====================================");
-  console.log("PASSWORD RESET TOKEN");
-  console.log("User:", user.email);
-  console.log("Token:", token);
-  console.log("Expires:", user.resetTokenExpiresAt);
-  console.log("====================================");
+console.log("PASSWORD RESET TOKEN");
+console.log("User:", user.email);
+console.log("Token:", token);
+console.log("Expires:", user.resetTokenExpiresAt);
 
   await mailService.send(
     user.email,
