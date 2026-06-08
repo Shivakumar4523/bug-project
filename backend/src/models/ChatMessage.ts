@@ -6,7 +6,8 @@ const chatMessageSchema = new Schema(
     sender: { type: Schema.Types.ObjectId, ref: "User", required: true },
     recipient: { type: Schema.Types.ObjectId, ref: "User" },
     project: { type: Schema.Types.ObjectId, ref: "Project" },
-    body: { type: String, required: true, trim: true }
+    body: { type: String, trim: true },
+    attachments: [{ type: String }]
   },
   { timestamps: true }
 );

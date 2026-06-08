@@ -6,6 +6,7 @@ import { Project } from "../models/Project.js";
 import { User } from "../models/User.js";
 import { authenticate } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { upload } from "../middleware/upload.js";
 
 export const chatRoutes = Router();
 chatRoutes.use(authenticate);
@@ -13,6 +14,7 @@ chatRoutes.use(authenticate);
 type HistoryAggregate = {
   _id: mongoose.Types.ObjectId;
   body: string;
+  attachments?: string[];
   createdAt: Date;
 };
 
@@ -22,10 +24,13 @@ function requireObjectId(value: unknown, label: string) {
   return value;
 }
 
-function messageBody(input: unknown) {
-  const body = typeof input === "object" && input && "body" in input ? String((input as { body?: unknown }).body ?? "").trim() : "";
-  if (!body) throw new AppError(400, "Message is required");
-  return body;
+function messageBodyAndAttachments(req: any) {
+  const body = typeof req.body === "object" && req.body && "body" in req.body ? String(req.body.body ?? "").trim() : "";
+  const attachments = (req.files as Express.Multer.File[] | undefined)?.map((file) => `/uploads/${file.filename}`) ?? [];
+  if (!body && attachments.length === 0) {
+    throw new AppError(400, "Message or attachment is required");
+  }
+  return { body, attachments };
 }
 
 function populateMessage(query: ReturnType<typeof ChatMessage.find>) {
@@ -64,6 +69,7 @@ chatRoutes.get("/history", (async (req, res) => {
       $group: {
         _id: "$conversationUser",
         body: { $first: "$body" },
+        attachments: { $first: "$attachments" },
         createdAt: { $first: "$createdAt" }
       }
     },
@@ -77,6 +83,7 @@ chatRoutes.get("/history", (async (req, res) => {
       $group: {
         _id: "$project",
         body: { $first: "$body" },
+        attachments: { $first: "$attachments" },
         createdAt: { $first: "$createdAt" }
       }
     },
@@ -88,14 +95,14 @@ chatRoutes.get("/history", (async (req, res) => {
       id: `direct:${message._id.toString()}`,
       kind: "direct",
       targetId: message._id.toString(),
-      preview: message.body,
+      preview: message.body || (message.attachments?.length ? `[Attachment]` : ""),
       updatedAt: message.createdAt.toISOString()
     })),
     ...projectMessages.map((message) => ({
       id: `project:${message._id.toString()}`,
       kind: "project",
       targetId: message._id.toString(),
-      preview: message.body,
+      preview: message.body || (message.attachments?.length ? `[Attachment]` : ""),
       updatedAt: message.createdAt.toISOString()
     }))
   ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
@@ -121,16 +128,18 @@ chatRoutes.get("/direct/:userId", (async (req, res) => {
   res.json(messages);
 }) as RequestHandler);
 
-chatRoutes.post("/direct/:userId", (async (req, res) => {
+chatRoutes.post("/direct/:userId", upload.array("files", 5), (async (req, res) => {
   const userId = requireObjectId(req.params.userId, "User");
   const recipient = await User.exists({ _id: userId });
   if (!recipient) throw new AppError(404, "User not found");
 
+  const { body, attachments } = messageBodyAndAttachments(req);
   const message = await ChatMessage.create({
     scope: "Direct",
     sender: req.user!.id,
     recipient: userId,
-    body: messageBody(req.body)
+    body,
+    attachments
   });
   res.status(201).json(await findMessage(message._id));
 }) as RequestHandler);
@@ -144,16 +153,18 @@ chatRoutes.get("/projects/:projectId", (async (req, res) => {
   res.json(messages);
 }) as RequestHandler);
 
-chatRoutes.post("/projects/:projectId", (async (req, res) => {
+chatRoutes.post("/projects/:projectId", upload.array("files", 5), (async (req, res) => {
   const projectId = requireObjectId(req.params.projectId, "Project");
   const project = await Project.exists({ _id: projectId });
   if (!project) throw new AppError(404, "Project not found");
 
+  const { body, attachments } = messageBodyAndAttachments(req);
   const message = await ChatMessage.create({
     scope: "Project",
     sender: req.user!.id,
     project: projectId,
-    body: messageBody(req.body)
+    body,
+    attachments
   });
   res.status(201).json(await findMessage(message._id));
 }) as RequestHandler);

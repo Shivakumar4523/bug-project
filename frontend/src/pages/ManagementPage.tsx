@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import { Avatar, AvatarGroup, Badge, Box, Chip, Divider, IconButton, InputAdornment, Paper, Stack, TextField, Typography } from "@mui/material";
+import { useMemo, useRef, useState } from "react";
+import { Avatar, AvatarGroup, Badge, Box, Button, Chip, Divider, IconButton, InputAdornment, Paper, Stack, TextField, Typography } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutline";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -29,6 +29,7 @@ type ChatMessage = {
   body: string;
   sender: User;
   createdAt: string;
+  attachments?: string[];
 };
 
 type ChatHistoryItem = {
@@ -93,6 +94,8 @@ export function ManagementPage() {
   const [search, setSearch] = useState("");
   const [activeId, setActiveId] = useState("");
   const [draft, setDraft] = useState("");
+  const [files, setFiles] = useState<FileList | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const me = currentUser<User>();
   const currentUserId = entityId(me);
   const users = useQuery({ queryKey: ["users"], queryFn: () => crud.list<User>("users") });
@@ -131,9 +134,22 @@ export function ManagementPage() {
   });
 
   const send = useMutation({
-    mutationFn: (body: string) => api<ChatMessage>(active!.kind === "project" ? `/chats/projects/${active!.targetId}` : `/chats/direct/${active!.targetId}`, { method: "POST", body: JSON.stringify({ body }) }),
+    mutationFn: (data: { body: string; files: FileList | null }) => {
+      const form = new FormData();
+      form.append("body", data.body);
+      if (data.files) {
+        Array.from(data.files).forEach((file) => form.append("files", file));
+      }
+      return api<ChatMessage>(
+        active!.kind === "project" 
+          ? `/chats/projects/${active!.targetId}` 
+          : `/chats/direct/${active!.targetId}`, 
+        { method: "POST", body: form }
+      );
+    },
     onSuccess: () => {
       setDraft("");
+      setFiles(null);
       qc.invalidateQueries({ queryKey: ["management-chat", active?.id] });
       qc.invalidateQueries({ queryKey: ["management-chat-history"] });
     }
@@ -141,8 +157,9 @@ export function ManagementPage() {
 
   const submitMessage = () => {
     const body = draft.trim();
-    if (!body || !active || send.isPending) return;
-    send.mutate(body);
+    const hasFiles = files && files.length > 0;
+    if ((!body && !hasFiles) || !active || send.isPending) return;
+    send.mutate({ body, files });
   };
 
   if (users.isLoading || projects.isLoading || users.error || projects.error) {
@@ -258,6 +275,31 @@ export function ManagementPage() {
               </Box>
 
               <Box sx={{ p: 2, bgcolor: "background.paper", borderTop: "1px solid #dde3ea" }}>
+                {files && files.length > 0 && (
+                  <Stack direction="row" spacing={1} sx={{ mb: 1.5, flexWrap: "wrap", gap: 0.5 }}>
+                    {Array.from(files).map((file, idx) => (
+                      <Chip
+                        key={idx}
+                        size="small"
+                        label={file.name}
+                        onDelete={() => {
+                          const dt = new DataTransfer();
+                          for (let i = 0; i < files.length; i++) {
+                            if (i !== idx) dt.items.add(files[i]);
+                          }
+                          setFiles(dt.files.length ? dt.files : null);
+                        }}
+                      />
+                    ))}
+                  </Stack>
+                )}
+                <input
+                  type="file"
+                  multiple
+                  ref={fileInputRef}
+                  onChange={(e) => setFiles(e.target.files)}
+                  style={{ display: "none" }}
+                />
                 <TextField
                   fullWidth
                   placeholder={active.kind === "project" ? "Message the team" : `Message ${active.name}`}
@@ -272,13 +314,13 @@ export function ManagementPage() {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <IconButton size="small" aria-label="Attach file"><AttachFileIcon /></IconButton>
+                        <IconButton size="small" aria-label="Attach file" onClick={() => fileInputRef.current?.click()}><AttachFileIcon /></IconButton>
                       </InputAdornment>
                     ),
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton size="small" aria-label="Insert emoji"><MoodIcon /></IconButton>
-                        <IconButton color="primary" aria-label="Send message" onClick={submitMessage} disabled={!draft.trim() || send.isPending}>
+                        <IconButton color="primary" aria-label="Send message" onClick={submitMessage} disabled={(!draft.trim() && !files?.length) || send.isPending}>
                           <SendIcon />
                         </IconButton>
                       </InputAdornment>
@@ -346,6 +388,11 @@ function ConversationRow({ conversation, selected, onClick }: { conversation: Co
   );
 }
 
+function isImageAttachment(filePath: string) {
+  const ext = filePath.split(".").pop()?.toLowerCase();
+  return ext ? ["png", "jpg", "jpeg", "gif", "webp"].includes(ext) : false;
+}
+
 function MessageBubble({ message, mine }: { message: ChatMessage; mine: boolean }) {
   return (
     <Stack direction="row" justifyContent={mine ? "flex-end" : "flex-start"} spacing={1.25} alignItems="flex-end">
@@ -368,7 +415,65 @@ function MessageBubble({ message, mine }: { message: ChatMessage; mine: boolean 
             boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
           }}
         >
-          <Typography>{message.body}</Typography>
+          {message.body && <Typography>{message.body}</Typography>}
+          {message.attachments && message.attachments.length > 0 && (
+            <Stack spacing={1} sx={{ mt: message.body ? 1.25 : 0 }}>
+              {message.attachments.map((file) => {
+                const isImg = isImageAttachment(file);
+                const displayName = file.split("-").slice(1).join("-") || file.split("/").pop() || "";
+                if (isImg) {
+                  return (
+                    <Box
+                      key={file}
+                      component="a"
+                      href={file}
+                      target="_blank"
+                      sx={{
+                        display: "block",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                        border: mine ? "1px solid rgba(255,255,255,0.15)" : "1px solid #dde3ea",
+                        maxWidth: "100%",
+                        maxHeight: 220,
+                        "& img": {
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          display: "block",
+                          transition: "opacity 0.2s",
+                          "&:hover": { opacity: 0.85 }
+                        }
+                      }}
+                    >
+                      <img src={file} alt={displayName} />
+                    </Box>
+                  );
+                }
+                return (
+                  <Button
+                    key={file}
+                    variant="outlined"
+                    size="small"
+                    startIcon={<AttachFileIcon />}
+                    href={file}
+                    target="_blank"
+                    sx={{
+                      textTransform: "none",
+                      justifyContent: "flex-start",
+                      color: mine ? "primary.contrastText" : "primary.main",
+                      borderColor: mine ? "rgba(255, 255, 255, 0.4)" : "divider",
+                      "&:hover": {
+                        borderColor: mine ? "rgba(255, 255, 255, 0.8)" : "primary.main",
+                        bgcolor: mine ? "rgba(255, 255, 255, 0.08)" : "rgba(15, 98, 254, 0.04)"
+                      }
+                    }}
+                  >
+                    <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>{displayName}</Typography>
+                  </Button>
+                );
+              })}
+            </Stack>
+          )}
         </Box>
         <Typography variant="caption" color="text.secondary" sx={{ display: "block", mt: 0.5, textAlign: mine ? "right" : "left" }}>
           {messageTime(message.createdAt)}
