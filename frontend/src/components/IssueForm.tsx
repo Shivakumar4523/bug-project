@@ -2,10 +2,11 @@ import { useForm, useWatch } from "react-hook-form";
 import { useState } from "react";
 import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import type { Issue, Project, Role, User } from "../types";
+import type { Issue, IssueStatus, Project, Role, User } from "../types";
+import { issueStatusLabel } from "../utils/issues";
 
 const priorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
-const statuses = ["OPEN", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"];
+const statuses: IssueStatus[] = ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"];
 
 export function IssueForm({
   projects,
@@ -23,6 +24,7 @@ export function IssueForm({
   const canSetCoreFields = currentUserRole === "Admin" || currentUserRole === "Tester";
   const canSetTesterFields = currentUserRole === "Tester";
   const canSetStatusOnly = currentUserRole === "Developer";
+  const canSetAssignee = currentUserRole === "Admin";
   const [screenshots, setScreenshots] = useState<File[]>([]);
   const { register, handleSubmit, control } = useForm({
     defaultValues: {
@@ -32,7 +34,7 @@ export function IssueForm({
       project: initial?.project?._id ?? projects[0]?._id ?? "",
       assignee: initial?.assignee?._id ?? "",
       priority: initial?.priority ?? "MEDIUM",
-      status: initial?.status ?? "OPEN",
+      status: initial?.status ?? (currentUserRole === "Tester" ? "BUG_BUCKET" : "OPEN"),
       dueDate: initial?.dueDate?.slice(0, 10) ?? ""
     }
   });
@@ -51,6 +53,8 @@ export function IssueForm({
       if (canSetTesterFields) {
         delete payload.severity;
         delete payload.labels;
+        delete payload.assignee;
+        delete payload.status;
       } else if (canSetCoreFields) {
         delete payload.priority;
         delete payload.severity;
@@ -72,7 +76,7 @@ export function IssueForm({
             <TextField label="Description" multiline minRows={4} {...register("description")} />
             <TextField select label="Issue Type" {...register("type")}>{["Bug", "Task", "Story", "Improvement"].map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>
             <TextField select label="Project" {...register("project")}>{projects.map((p) => <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>)}</TextField>
-            <TextField select label="Assignee" {...register("assignee")}><MenuItem value="">Unassigned</MenuItem>{availableAssignees.length > 0 ? availableAssignees.map((u) => <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>{u.name}</MenuItem>) : <MenuItem disabled>No members in this project</MenuItem>}</TextField>
+            {canSetAssignee && <TextField select label="Assignee" {...register("assignee")}><MenuItem value="">Unassigned</MenuItem>{availableAssignees.length > 0 ? availableAssignees.map((u) => <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>{u.name}</MenuItem>) : <MenuItem disabled>No members in this project</MenuItem>}</TextField>}
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ xs: "stretch", sm: "center" }}>
               <Button component="label" startIcon={<AttachFileIcon />} variant="outlined">
                 Screenshots
@@ -87,11 +91,10 @@ export function IssueForm({
         {canSetTesterFields && (
           <>
             <TextField select label="Priority" {...register("priority")}>{priorities.map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>
-            <TextField select label="Status" {...register("status")}>{statuses.map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>
             <TextField label="Due Date" type="date" InputLabelProps={{ shrink: true }} {...register("dueDate")} />
           </>
         )}
-        {canSetStatusOnly && <TextField select label="Status" {...register("status")}>{statuses.map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>}
+        {canSetStatusOnly && <TextField select label="Status" {...register("status")}>{statuses.map((x) => <MenuItem key={x} value={x}>{issueStatusLabel(x)}</MenuItem>)}</TextField>}
         <Button variant="contained" type="submit">Save Issue</Button>
       </Stack>
     </Box>

@@ -5,8 +5,9 @@ import { api, crud } from "../api/client";
 import { DataState } from "../components/DataState";
 import { PageHeader } from "../components/PageHeader";
 import type { Issue, IssueStatus, Project, User } from "../types";
+import { issueStatusLabel } from "../utils/issues";
 
-const statuses: IssueStatus[] = ["ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"];
+const statuses: IssueStatus[] = ["BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"];
 const priorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 
 export function KanbanPage() {
@@ -32,7 +33,7 @@ export function KanbanPage() {
           <Grid key={status} sx={{ minWidth: 280, flex: "0 0 280px" }}>
             <Card className="kanban-column" onDragOver={(e) => e.preventDefault()} onDrop={(e) => update.mutate({ id: e.dataTransfer.getData("issueId"), status })}>
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 1 }}>{status}</Typography>
+                <Typography variant="h6" sx={{ mb: 1 }}>{issueStatusLabel(status)}</Typography>
                 <Stack spacing={1}>
                   {filtered.filter((i) => i.status === status).map((issue) => (
                     <Card key={issue._id} draggable onDragStart={(e) => e.dataTransfer.setData("issueId", issue._id)} sx={{ cursor: "grab", border: "1px solid #dde3ea" }}>

@@ -17,7 +17,13 @@ export const issueController = {
   list: (async (req, res) => {
     const filter: Record<string, unknown> = {};
     for (const key of ["project", "assignee", "priority", "severity", "status", "reporter"]) if (req.query[key]) filter[key] = req.query[key];
-    if (req.user?.role === "Developer") filter.assignee = req.user.id;
+    if (req.user?.role === "Developer") {
+      if (filter.assignee || filter.status || filter.reporter) {
+        filter.$and = [{ $or: [{ assignee: req.user.id }, { status: "BUG_BUCKET" }] }];
+      } else {
+        filter.$or = [{ assignee: req.user.id }, { status: "BUG_BUCKET" }];
+      }
+    }
     if (req.user?.role === "Tester") filter.reporter = req.user.id;
     const issues = await Issue.find(filter).populate(populate).sort({ updatedAt: -1 });
     res.json(issues);

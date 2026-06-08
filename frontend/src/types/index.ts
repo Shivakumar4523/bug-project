@@ -1,5 +1,5 @@
 export type Role = "Admin" | "Developer" | "Tester";
-export type IssueStatus = "OPEN" | "ASSIGNED" | "IN_PROGRESS" | "FIXED" | "READY_FOR_TESTING" | "REOPENED" | "CLOSED";
+export type IssueStatus = "OPEN" | "BUG_BUCKET" | "ASSIGNED" | "IN_PROGRESS" | "FIXED" | "READY_FOR_TESTING" | "REOPENED" | "CLOSED";
 export type IssuePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type IssueSeverity = "MINOR" | "MAJOR" | "CRITICAL" | "BLOCKER";
 

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import { DataState } from "./DataState";
 import type { Issue, Role, User } from "../types";
+import { issueStatusLabel } from "../utils/issues";
 
 type Comment = { _id: string; body: string; author: User; attachments?: string[]; createdAt: string };
 
@@ -72,7 +73,7 @@ export function IssueDetailDialog({
         {!issue ? null : (
           <Stack spacing={2}>
             <Stack direction="row" spacing={1} flexWrap="wrap">
-              <Chip label={issue.status} />
+              <Chip label={issueStatusLabel(issue.status)} />
               <Chip label={issue.priority} color={issue.priority === "CRITICAL" ? "error" : "default"} />
               <Chip label={issue.assignee?.name ?? "Unassigned"} />
               <Chip label={issue.project?.name} />

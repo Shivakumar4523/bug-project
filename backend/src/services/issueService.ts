@@ -124,16 +124,17 @@ async function emailDevelopersAboutTesterIssue(issue: any, reporter: Express.Use
 
   if (!developers.length) return;
 
-  const subject = `New Issue Assigned - ${issue.issueNumber}`;
+  const isBucketIssue = issue.status === "BUG_BUCKET";
+  const subject = `${isBucketIssue ? "New Bug in Bucket" : "New Issue Assigned"} - ${issue.issueNumber}`;
 
   for (const developer of developers) {
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:700px">
-        <h2 style="color:#1976d2">New Issue Assigned</h2>
+        <h2 style="color:#1976d2">${isBucketIssue ? "New Bug in Bucket" : "New Issue Assigned"}</h2>
 
         <p>Hello <strong>${escapeHtml(developer.name)}</strong>,</p>
 
-        <p>A new issue has been created by the tester and assigned to you.</p>
+        <p>A new issue has been created by the tester and ${isBucketIssue ? "added to the developer bug bucket." : "assigned to you."}</p>
 
         <table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;width:100%">
           <tr>
@@ -192,6 +193,8 @@ export const issueService = {
     if (user.role === "Tester") {
       delete payload.severity;
       delete payload.labels;
+      delete payload.assignee;
+      payload.status = "BUG_BUCKET";
     }
 
     const status = payload.status ?? (payload.assignee ? "ASSIGNED" : "OPEN");
@@ -206,7 +209,7 @@ export const issueService = {
     await notifyUsers({ role: "Admin", disabled: { $ne: true } }, "Issue Created", issue.title, "Issue Created", issue._id.toString());
     if (user.role === "Tester") {
       await emailDevelopersAboutTesterIssue(issue, user, payload.assignee);
-      await notifyAssignee(payload.assignee, issue._id.toString(), issue.title, { sendEmail: false });
+      await notifyUsers({ role: "Developer", disabled: { $ne: true } }, "Bug Bucket", issue.title, "Issue Created", issue._id.toString());
     } else {
       await notifyAssignee(payload.assignee, issue._id.toString(), issue.title, { sender: user });
     }
@@ -228,6 +231,12 @@ export const issueService = {
     if (user.role === "Tester") {
       delete update.severity;
       delete update.labels;
+      delete update.assignee;
+    }
+
+    if (user.role === "Developer" && before.status === "BUG_BUCKET" && !before.assignee && update.status && update.status !== "BUG_BUCKET") {
+      update.assignee = user.id;
+      update.assignedBy = user.id;
     }
 
     if (update.assignee && update.assignee !== String(before.assignee)) {

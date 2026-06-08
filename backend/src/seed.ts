@@ -122,7 +122,7 @@ export async function seedDefaults() {
   }
 
   for (const name of ["LOW", "MEDIUM", "HIGH", "CRITICAL"]) await Priority.updateOne({ name }, { name }, { upsert: true });
-  for (const name of ["OPEN", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"]) await Status.updateOne({ name }, { name }, { upsert: true });
+  for (const name of ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"]) await Status.updateOne({ name }, { name }, { upsert: true });
   for (const name of ["Frontend", "Backend", "Infrastructure", "Security"]) await Category.updateOne({ name }, { name }, { upsert: true });
   await EmailTemplate.updateOne(
     { name: "Issue Assigned" },

@@ -3,7 +3,7 @@ import mongoose, { Schema, type InferSchemaType } from "mongoose";
 export const issueTypes = ["Bug", "Task", "Story", "Improvement"] as const;
 export const issuePriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 export const issueSeverities = ["MINOR", "MAJOR", "CRITICAL", "BLOCKER"] as const;
-export const issueStatuses = ["OPEN", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"] as const;
+export const issueStatuses = ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"] as const;
 
 const issueSchema = new Schema(
   {

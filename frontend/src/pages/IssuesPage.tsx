@@ -14,6 +14,7 @@ import { IssueForm } from "../components/IssueForm";
 import { IssueDetailDialog } from "../components/IssueDetailDialog";
 import { PageHeader } from "../components/PageHeader";
 import type { Issue, IssueStatus, Project, User } from "../types";
+import { issueStatusLabel } from "../utils/issues";
 
 const developerStatusOptions: { label: string; value: IssueStatus }[] = [
   { label: "In Progress", value: "IN_PROGRESS" },
@@ -128,7 +129,7 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
                   </Tooltip>
                 </TableCell>
                 <TableCell>{issue.project?.name}</TableCell>
-                <TableCell><Chip size="small" label={issue.status} /></TableCell>
+                <TableCell><Chip size="small" label={issueStatusLabel(issue.status)} /></TableCell>
                 <TableCell>{issue.priority}</TableCell>
                 <TableCell>{issue.severity}</TableCell>
                 <TableCell>{issue.assignee?.name ?? "Unassigned"}</TableCell>
