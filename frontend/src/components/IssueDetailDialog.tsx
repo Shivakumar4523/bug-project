@@ -73,7 +73,7 @@ export function IssueDetailDialog({
         {!issue ? null : (
           <Stack spacing={2}>
             <Stack direction="row" spacing={1} flexWrap="wrap">
-              <Chip label={issueStatusLabel(issue.status)} />
+              <Chip label={issueStatusLabel(issue.status, currentUserRole)} />
               <Chip label={issue.category} />
               <Chip label={issue.priority} color={issue.priority === "CRITICAL" ? "error" : "default"} />
               <Chip label={issue.assignee?.name ?? "Unassigned"} />

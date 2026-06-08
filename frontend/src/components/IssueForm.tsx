@@ -134,7 +134,7 @@ export function IssueForm({
             <TextField label="Due Date" type="date" InputLabelProps={{ shrink: true }} {...register("dueDate")} />
           </>
         )}
-        {canSetStatusOnly && <TextField select label="Status" {...register("status")}>{statuses.map((x) => <MenuItem key={x} value={x}>{issueStatusLabel(x)}</MenuItem>)}</TextField>}
+        {canSetStatusOnly && <TextField select label="Status" {...register("status")}>{statuses.map((x) => <MenuItem key={x} value={x}>{issueStatusLabel(x, currentUserRole)}</MenuItem>)}</TextField>}
         <Button variant="contained" type="submit">Save Issue</Button>
       </Stack>
     </Box>

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Button, Chip, Dialog, DialogContent, DialogTitle, IconButton, ListSubheader, Menu, MenuItem, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Box } from "@mui/material";
+import { Button, Chip, Dialog, DialogContent, DialogTitle, IconButton, ListSubheader, Menu, MenuItem, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Box } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -29,17 +29,19 @@ const testerStatusOptions: { label: string; value: IssueStatus }[] = [
 ];
 
 const issueColumns = [
-  { key: "id", label: "ID", width: "8%" },
-  { key: "title", label: "Title", width: "13%" },
-  { key: "project", label: "Project", width: "13%" },
-  { key: "category", label: "Category", width: "10%" },
-  { key: "status", label: "Status", width: "13%" },
-  { key: "priority", label: "Priority", width: "8%" },
-  { key: "severity", label: "Severity", width: "8%" },
-  { key: "assignee", label: "Assignee", width: "15%" },
-  { key: "dueDate", label: "Due Date", width: "7%" },
-  { key: "actions", label: "Actions", width: "5%" }
+  { key: "id", label: "ID", width: 90 },
+  { key: "title", label: "Title", width: 190 },
+  { key: "project", label: "Project", width: 220 },
+  { key: "category", label: "Category", width: 160 },
+  { key: "status", label: "Status", width: 180 },
+  { key: "priority", label: "Priority", width: 120 },
+  { key: "severity", label: "Severity", width: 120 },
+  { key: "assignee", label: "Assignee", width: 250 },
+  { key: "dueDate", label: "Due Date", width: 130 },
+  { key: "actions", label: "Actions", width: 160 }
 ];
+
+const tableMinWidth = issueColumns.reduce((total, column) => total + column.width, 0);
 
 const wrappingCellSx = {
   overflowWrap: "anywhere",
@@ -132,71 +134,73 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
   return (
     <>
       <PageHeader title={scope === "mine" ? "My Issues" : scope === "watchlist" ? "Watchlist" : "Issues"} action={canCreate ? createActionLabel : undefined} onAction={canCreate ? () => setCreateOpen(true) : undefined} />
-      <Table
-        size="small"
-        sx={{
-          width: "100%",
-          tableLayout: "fixed",
-          "& .MuiTableCell-root": { px: 1.25, py: 1.5 }
-        }}
-      >
-        <TableHead>
-          <TableRow>
-            {issueColumns.map((column) => (
-              <TableCell key={column.key} sx={{ ...wrappingCellSx, width: column.width, fontWeight: 800 }}>{column.label}</TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((issue) => {
-            const watching = isWatching(issue, meId);
-            return (
-              <TableRow key={issue._id}>
-                <TableCell sx={wrappingCellSx}>{issue.issueNumber}</TableCell>
-                <TableCell sx={wrappingCellSx}>
-                  <Tooltip title={issue.description || "No description provided"} arrow>
-                    <Box sx={{ cursor: "pointer", textDecoration: "underline" }}>{issue.title}</Box>
-                  </Tooltip>
-                </TableCell>
-                <TableCell sx={wrappingCellSx}>{issue.project?.name}</TableCell>
-                <TableCell sx={wrappingCellSx}>{issue.category}</TableCell>
-                <TableCell sx={wrappingCellSx}><Chip size="small" label={issueStatusLabel(issue.status)} sx={{ maxWidth: "100%", "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" } }} /></TableCell>
-                <TableCell sx={wrappingCellSx}>{issue.priority}</TableCell>
-                <TableCell sx={wrappingCellSx}>{issue.severity}</TableCell>
-                <TableCell sx={wrappingCellSx}>{issue.assignee?.name ?? "Unassigned"}</TableCell>
-                <TableCell sx={wrappingCellSx}>{issue.dueDate ? new Date(issue.dueDate).toLocaleDateString() : ""}</TableCell>
-                <TableCell sx={{ verticalAlign: "top" }}>
-                  <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap" }}>
-                    <Tooltip title="View details and comments">
-                      <IconButton size="small" aria-label="View issue details" onClick={() => setSelected(issue)}><ForumIcon /></IconButton>
+      <TableContainer sx={{ maxWidth: "100%", overflowX: "auto", pb: 1 }}>
+        <Table
+          size="small"
+          sx={{
+            minWidth: tableMinWidth,
+            tableLayout: "fixed",
+            "& .MuiTableCell-root": { px: 1.25, py: 1.5 }
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              {issueColumns.map((column) => (
+                <TableCell key={column.key} sx={{ width: column.width, fontWeight: 800, whiteSpace: "nowrap" }}>{column.label}</TableCell>
+              ))}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows.map((issue) => {
+              const watching = isWatching(issue, meId);
+              return (
+                <TableRow key={issue._id}>
+                  <TableCell sx={wrappingCellSx}>{issue.issueNumber}</TableCell>
+                  <TableCell sx={wrappingCellSx}>
+                    <Tooltip title={issue.description || "No description provided"} arrow>
+                      <Box sx={{ cursor: "pointer", textDecoration: "underline" }}>{issue.title}</Box>
                     </Tooltip>
-                    {canEdit && (
-                      <Tooltip title="Edit issue">
-                        <IconButton size="small" color="primary" aria-label="Edit issue" onClick={() => setEditing(issue)}><EditIcon /></IconButton>
+                  </TableCell>
+                  <TableCell sx={wrappingCellSx}>{issue.project?.name}</TableCell>
+                  <TableCell sx={wrappingCellSx}>{issue.category}</TableCell>
+                  <TableCell sx={wrappingCellSx}><Chip size="small" label={issueStatusLabel(issue.status, me?.role)} sx={{ maxWidth: "100%", "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" } }} /></TableCell>
+                  <TableCell sx={wrappingCellSx}>{issue.priority}</TableCell>
+                  <TableCell sx={wrappingCellSx}>{issue.severity}</TableCell>
+                  <TableCell sx={wrappingCellSx}>{issue.assignee?.name ?? "Unassigned"}</TableCell>
+                  <TableCell sx={wrappingCellSx}>{issue.dueDate ? new Date(issue.dueDate).toLocaleDateString() : ""}</TableCell>
+                  <TableCell sx={{ verticalAlign: "top", whiteSpace: "nowrap" }}>
+                    <Stack direction="row" spacing={0.5}>
+                      <Tooltip title="View details and comments">
+                        <IconButton size="small" aria-label="View issue details" onClick={() => setSelected(issue)}><ForumIcon /></IconButton>
                       </Tooltip>
-                    )}
-                    {canChangeIssueStatus && (
-                      <Tooltip title={statusActionLabel}>
-                        <IconButton size="small" aria-label={statusActionLabel} onClick={(event) => openStatusMenu(event, issue)}><MoreHorizIcon /></IconButton>
+                      {canEdit && (
+                        <Tooltip title="Edit issue">
+                          <IconButton size="small" color="primary" aria-label="Edit issue" onClick={() => setEditing(issue)}><EditIcon /></IconButton>
+                        </Tooltip>
+                      )}
+                      {canChangeIssueStatus && (
+                        <Tooltip title={statusActionLabel}>
+                          <IconButton size="small" aria-label={statusActionLabel} onClick={(event) => openStatusMenu(event, issue)}><MoreHorizIcon /></IconButton>
+                        </Tooltip>
+                      )}
+                      <Tooltip title={watching ? "Remove from watchlist" : "Add to watchlist"}>
+                        <IconButton size="small" aria-label={watching ? "Remove from watchlist" : "Add to watchlist"} onClick={() => (watching ? unwatch : watch).mutate(issue._id)}>
+                          {watching ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
                       </Tooltip>
-                    )}
-                    <Tooltip title={watching ? "Remove from watchlist" : "Add to watchlist"}>
-                      <IconButton size="small" aria-label={watching ? "Remove from watchlist" : "Add to watchlist"} onClick={() => (watching ? unwatch : watch).mutate(issue._id)}>
-                        {watching ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </IconButton>
-                    </Tooltip>
-                    {canDelete && (
-                      <Tooltip title="Delete issue">
-                        <IconButton size="small" color="error" aria-label="Delete issue" onClick={() => remove.mutate(issue._id)}><DeleteIcon /></IconButton>
-                      </Tooltip>
-                    )}
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                      {canDelete && (
+                        <Tooltip title="Delete issue">
+                          <IconButton size="small" color="error" aria-label="Delete issue" onClick={() => remove.mutate(issue._id)}><DeleteIcon /></IconButton>
+                        </Tooltip>
+                      )}
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
       <Menu anchorEl={statusMenu?.anchorEl ?? null} open={Boolean(statusMenu)} onClose={() => setStatusMenu(null)}>
         <ListSubheader>{me?.role === "Tester" ? "Verify fix" : "Change status to"}</ListSubheader>
         {statusOptions.map((option) => (

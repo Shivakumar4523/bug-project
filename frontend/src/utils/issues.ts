@@ -1,4 +1,4 @@
-import type { IssueStatus } from "../types";
+import type { IssueStatus, Role } from "../types";
 
 const statusLabels: Record<IssueStatus, string> = {
   OPEN: "Open",
@@ -11,6 +11,7 @@ const statusLabels: Record<IssueStatus, string> = {
   CLOSED: "Closed"
 };
 
-export function issueStatusLabel(status?: string) {
+export function issueStatusLabel(status?: string, role?: Role) {
+  if (status === "BUG_BUCKET" && role === "Tester") return "Reported Bug";
   return statusLabels[status as IssueStatus] ?? status ?? "";
 }

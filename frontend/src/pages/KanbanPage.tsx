@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Box, Card, CardContent, Chip, Grid2 as Grid, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import { useState } from "react";
-import { api, crud } from "../api/client";
+import { api, crud, currentUser } from "../api/client";
 import { DataState } from "../components/DataState";
 import { PageHeader } from "../components/PageHeader";
 import type { Issue, IssueStatus, Project, User } from "../types";
@@ -12,6 +12,7 @@ const priorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 
 export function KanbanPage() {
   const qc = useQueryClient();
+  const me = currentUser<User>();
   const [filters, setFilters] = useState({ project: "", assignee: "", priority: "" });
   const issues = useQuery({ queryKey: ["issues", "kanban"], queryFn: () => api<Issue[]>("/issues") });
   const projects = useQuery({ queryKey: ["projects"], queryFn: () => crud.list<Project>("projects") });
@@ -33,7 +34,7 @@ export function KanbanPage() {
           <Grid key={status} sx={{ minWidth: 280, flex: "0 0 280px" }}>
             <Card className="kanban-column" onDragOver={(e) => e.preventDefault()} onDrop={(e) => update.mutate({ id: e.dataTransfer.getData("issueId"), status })}>
               <CardContent>
-                <Typography variant="h6" sx={{ mb: 1 }}>{issueStatusLabel(status)}</Typography>
+                <Typography variant="h6" sx={{ mb: 1 }}>{issueStatusLabel(status, me?.role)}</Typography>
                 <Stack spacing={1}>
                   {filtered.filter((i) => i.status === status).map((issue) => (
                     <Card key={issue._id} draggable onDragStart={(e) => e.dataTransfer.setData("issueId", issue._id)} sx={{ cursor: "grab", border: "1px solid #dde3ea" }}>
