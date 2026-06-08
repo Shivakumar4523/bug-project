@@ -4,11 +4,13 @@ export const issueTypes = ["Bug", "Task", "Story", "Improvement"] as const;
 export const issuePriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 export const issueSeverities = ["MINOR", "MAJOR", "CRITICAL", "BLOCKER"] as const;
 export const issueStatuses = ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"] as const;
+export const issueCategories = ["UI Bug", "Backend Bug", "API Bug", "Database Bug", "Performance Bug", "Security Bug", "Mobile Bug", "Enhancement Request"] as const;
 
 const issueSchema = new Schema(
   {
     issueNumber: { type: String, required: true, unique: true },
     type: { type: String, enum: issueTypes, default: "Bug" },
+    category: { type: String, enum: issueCategories, required: true },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
     project: { type: Schema.Types.ObjectId, ref: "Project", required: true },

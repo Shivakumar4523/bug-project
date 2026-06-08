@@ -150,6 +150,10 @@ async function emailDevelopersAboutTesterIssue(issue: any, reporter: Express.Use
             <td>${escapeHtml(issue.status)}</td>
           </tr>
           <tr>
+            <td><strong>Category</strong></td>
+            <td>${escapeHtml(issue.category)}</td>
+          </tr>
+          <tr>
             <td><strong>Priority</strong></td>
             <td>${escapeHtml(issue.priority)}</td>
           </tr>

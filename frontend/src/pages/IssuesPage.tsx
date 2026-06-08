@@ -17,6 +17,7 @@ import type { Issue, IssueStatus, Project, User } from "../types";
 import { issueStatusLabel } from "../utils/issues";
 
 const developerStatusOptions: { label: string; value: IssueStatus }[] = [
+  { label: "Pick Bug", value: "ASSIGNED" },
   { label: "In Progress", value: "IN_PROGRESS" },
   { label: "Fixed", value: "FIXED" },
   { label: "Ready for Testing", value: "READY_FOR_TESTING" }
@@ -114,7 +115,7 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
       <Table size="small">
         <TableHead>
           <TableRow>
-            {["ID", "Title", "Project", "Status", "Priority", "Severity", "Assignee", "Due Date", "Actions"].map((heading) => <TableCell key={heading}>{heading}</TableCell>)}
+            {["ID", "Title", "Project", "Category", "Status", "Priority", "Severity", "Assignee", "Due Date", "Actions"].map((heading) => <TableCell key={heading}>{heading}</TableCell>)}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -129,6 +130,7 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
                   </Tooltip>
                 </TableCell>
                 <TableCell>{issue.project?.name}</TableCell>
+                <TableCell>{issue.category}</TableCell>
                 <TableCell><Chip size="small" label={issueStatusLabel(issue.status)} /></TableCell>
                 <TableCell>{issue.priority}</TableCell>
                 <TableCell>{issue.severity}</TableCell>

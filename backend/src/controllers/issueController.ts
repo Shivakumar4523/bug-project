@@ -16,7 +16,7 @@ const populate = [
 export const issueController = {
   list: (async (req, res) => {
     const filter: Record<string, unknown> = {};
-    for (const key of ["project", "assignee", "priority", "severity", "status", "reporter"]) if (req.query[key]) filter[key] = req.query[key];
+    for (const key of ["project", "assignee", "category", "priority", "severity", "status", "reporter"]) if (req.query[key]) filter[key] = req.query[key];
     if (req.user?.role === "Developer") {
       if (filter.assignee || filter.status || filter.reporter) {
         filter.$and = [{ $or: [{ assignee: req.user.id }, { status: "BUG_BUCKET" }] }];

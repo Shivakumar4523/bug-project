@@ -40,7 +40,7 @@ export function KanbanPage() {
                       <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
                         <Typography variant="body2" fontWeight={800}>{issue.issueNumber}</Typography>
                         <Typography variant="body2">{issue.title}</Typography>
-                        <Box sx={{ display: "flex", gap: 1, mt: 1 }}><Chip size="small" label={issue.priority} /><Chip size="small" label={issue.assignee?.name ?? "Unassigned"} /></Box>
+                        <Box sx={{ display: "flex", gap: 1, mt: 1, flexWrap: "wrap" }}><Chip size="small" label={issue.category} /><Chip size="small" label={issue.priority} /><Chip size="small" label={issue.assignee?.name ?? "Unassigned"} /></Box>
                       </CardContent>
                     </Card>
                   ))}

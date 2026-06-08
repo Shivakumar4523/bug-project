@@ -2,6 +2,7 @@ export type Role = "Admin" | "Developer" | "Tester";
 export type IssueStatus = "OPEN" | "BUG_BUCKET" | "ASSIGNED" | "IN_PROGRESS" | "FIXED" | "READY_FOR_TESTING" | "REOPENED" | "CLOSED";
 export type IssuePriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
 export type IssueSeverity = "MINOR" | "MAJOR" | "CRITICAL" | "BLOCKER";
+export type IssueCategory = "UI Bug" | "Backend Bug" | "API Bug" | "Database Bug" | "Performance Bug" | "Security Bug" | "Mobile Bug" | "Enhancement Request";
 
 export interface UserSmtpSettings {
   enabled: boolean;
@@ -46,6 +47,7 @@ export interface Issue {
   _id: string;
   issueNumber: string;
   type: "Bug" | "Task" | "Story" | "Improvement";
+  category: IssueCategory;
   title: string;
   description?: string;
   project: Project;
