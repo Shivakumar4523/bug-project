@@ -162,8 +162,8 @@ export function ManagementPage() {
     send.mutate({ body, files });
   };
 
-  if (users.isLoading || projects.isLoading || users.error || projects.error) {
-    return <DataState loading={users.isLoading || projects.isLoading} error={users.error || projects.error} />;
+  if (users.isPending || projects.isPending || users.error || projects.error) {
+    return <DataState loading={users.isPending || projects.isPending} error={users.error || projects.error} />;
   }
 
   return (

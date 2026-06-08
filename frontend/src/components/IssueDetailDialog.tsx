@@ -113,9 +113,9 @@ export function IssueDetailDialog({
             )}
             <Divider />
             <Typography variant="h6">Activity Timeline</Typography>
-            {comments.isLoading || comments.error ? <DataState loading={comments.isLoading} error={comments.error} /> : (
+            {comments.isPending || comments.error ? <DataState loading={comments.isPending} error={comments.error} /> : (
               <Stack spacing={1.5}>
-                {comments.data!.map((comment) => (
+                {(comments.data ?? []).map((comment) => (
                   <Box key={comment._id} sx={{ borderLeft: "3px solid #0f62fe", pl: 2 }}>
                     <Typography variant="body2" fontWeight={800}>{comment.author?.name ?? "User"} · {new Date(comment.createdAt).toLocaleString()}</Typography>
                     <Typography component="div" variant="body2" dangerouslySetInnerHTML={{ __html: comment.body }} />

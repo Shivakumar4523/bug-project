@@ -64,7 +64,7 @@ export function AccountSettingsPage() {
     if (settings.data) reset(valuesFromUser(settings.data));
   }, [reset, settings.data]);
 
-  if (settings.isLoading || settings.error) return <DataState loading={settings.isLoading} error={settings.error} />;
+  if (settings.isPending || settings.error) return <DataState loading={settings.isPending} error={settings.error} />;
 
   return (
     <>

@@ -16,7 +16,7 @@ function exportFile(type: "csv" | "excel" | "pdf", data: unknown) {
 
 export function ReportsPage() {
   const reports = useQuery({ queryKey: ["reports"], queryFn: () => api<any>("/reports") });
-  if (reports.isLoading || reports.error) return <DataState loading={reports.isLoading} error={reports.error} />;
+  if (reports.isPending || reports.error) return <DataState loading={reports.isPending} error={reports.error} />;
   const data = reports.data.teamPerformance.map((x: any) => ({ user: x._id ?? "Unassigned", total: x.total, resolved: x.resolved }));
   return <>
     <PageHeader title="Reports" />

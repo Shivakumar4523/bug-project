@@ -109,8 +109,8 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
     }
   });
 
-  if (issues.isLoading || projects.isLoading || users.isLoading || issues.error || projects.error || users.error) {
-    return <DataState loading={issues.isLoading || projects.isLoading || users.isLoading} error={issues.error || projects.error || users.error} />;
+  if (issues.isPending || projects.isPending || users.isPending || issues.error || projects.error || users.error) {
+    return <DataState loading={issues.isPending || projects.isPending || users.isPending} error={issues.error || projects.error || users.error} />;
   }
 
   const canCreate = me?.role === "Admin" || me?.role === "Tester";

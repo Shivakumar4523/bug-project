@@ -16,7 +16,7 @@ export function DashboardPage() {
   const [selectedIssue, setSelectedIssue] = useState<Issue | null>(null);
   const stats = useQuery({ queryKey: ["dashboard"], queryFn: () => api<any>("/reports/dashboard") });
   const issues = useQuery({ queryKey: ["issues", "recent"], queryFn: () => api<Issue[]>("/issues") });
-  if (stats.isLoading || issues.isLoading || stats.error || issues.error) return <DataState loading={stats.isLoading || issues.isLoading} error={stats.error || issues.error} />;
+  if (stats.isPending || issues.isPending || stats.error || issues.error) return <DataState loading={stats.isPending || issues.isPending} error={stats.error || issues.error} />;
   const bugBucketLabel = me?.role === "Tester" ? "Reported Bug" : "Bug Bucket";
   const cards = [
     ["Total Projects", stats.data!.totalProjects],

@@ -61,7 +61,7 @@ export function KanbanPage() {
   const projects = useQuery({ queryKey: ["projects"], queryFn: () => crud.list<Project>("projects") });
   const users = useQuery({ queryKey: ["users"], queryFn: () => crud.list<User>("users") });
   const update = useMutation({ mutationFn: ({ id, status }: { id: string; status: string }) => crud.update<Issue>("issues", id, { status }), onSuccess: () => qc.invalidateQueries({ queryKey: ["issues"] }) });
-  if (issues.isLoading || projects.isLoading || users.isLoading || issues.error || projects.error || users.error) return <DataState loading={issues.isLoading || projects.isLoading || users.isLoading} error={issues.error || projects.error || users.error} />;
+  if (issues.isPending || projects.isPending || users.isPending || issues.error || projects.error || users.error) return <DataState loading={issues.isPending || projects.isPending || users.isPending} error={issues.error || projects.error || users.error} />;
   const filtered = issues.data!.filter((i) => (!filters.project || i.project?._id === filters.project) && (!filters.assignee || i.assignee?._id === filters.assignee) && (!filters.priority || i.priority === filters.priority));
 
   return (

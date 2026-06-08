@@ -190,7 +190,7 @@ export function UsersPage() {
     downloadXlsx("pirnav-user-import-reference.xlsx", "Users", userImportTemplate);
   };
 
-  if (users.isLoading || users.error) return <DataState loading={users.isLoading} error={users.error} />;
+  if (users.isPending || users.error) return <DataState loading={users.isPending} error={users.error} />;
   const query = search.trim().toLowerCase();
   const filteredUsers = query
     ? users.data!.filter((user) => [user.name, user.email, user.role, user.department ?? ""].some((value) => value.toLowerCase().includes(query)))

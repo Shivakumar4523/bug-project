@@ -24,7 +24,7 @@ export function SettingsPage({ resource, title, template }: { resource: string; 
   const items = useQuery({ queryKey: [resource], queryFn: () => crud.list<Item>(resource) });
   const create = useMutation({ mutationFn: (data: unknown) => crud.create<Item>(resource, data), onSuccess: () => { qc.invalidateQueries({ queryKey: [resource] }); setOpen(false); } });
   const remove = useMutation({ mutationFn: (id: string) => crud.remove(resource, id), onSuccess: () => qc.invalidateQueries({ queryKey: [resource] }) });
-  if (items.isLoading || items.error) return <DataState loading={items.isLoading} error={items.error} />;
+  if (items.isPending || items.error) return <DataState loading={items.isPending} error={items.error} />;
   return <>
     <PageHeader title={title} action="Create" onAction={() => setOpen(true)} />
     <Table size="small"><TableHead><TableRow>{(template ? ["Name", "Subject", "Body", "Actions"] : ["Name", "Color", "Description", "Actions"]).map((h) => <TableCell key={h}>{h}</TableCell>)}</TableRow></TableHead><TableBody>{items.data!.map((item) => <TableRow key={item._id}><TableCell>{item.name}</TableCell><TableCell>{template ? item.subject : item.color}</TableCell><TableCell>{template ? item.body : item.description}</TableCell><TableCell><IconButton color="error" onClick={() => remove.mutate(item._id)}><DeleteIcon /></IconButton></TableCell></TableRow>)}</TableBody></Table>

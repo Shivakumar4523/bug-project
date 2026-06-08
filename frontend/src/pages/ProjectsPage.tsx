@@ -95,7 +95,7 @@ export function ProjectsPage() {
   const create = useMutation({ mutationFn: (data: unknown) => crud.create<Project>("projects", data), onSuccess: () => { qc.invalidateQueries({ queryKey: ["projects"] }); setOpen(false); } });
   const update = useMutation({ mutationFn: ({ id, data }: { id: string; data: unknown }) => crud.update<Project>("projects", id, data), onSuccess: () => { qc.invalidateQueries({ queryKey: ["projects"] }); setEditingProject(null); } });
   const remove = useMutation({ mutationFn: (id: string) => crud.remove("projects", id), onSuccess: () => qc.invalidateQueries({ queryKey: ["projects"] }) });
-  if (projects.isLoading || users.isLoading || projects.error || users.error) return <DataState loading={projects.isLoading || users.isLoading} error={projects.error || users.error} />;
+  if (projects.isPending || users.isPending || projects.error || users.error) return <DataState loading={projects.isPending || users.isPending} error={projects.error || users.error} />;
   return (
     <>
       <PageHeader title="Projects" action="Create Project" onAction={() => setOpen(true)} />
