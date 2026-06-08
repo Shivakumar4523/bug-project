@@ -6,6 +6,7 @@ import { AppError } from "../middleware/errorHandler.js";
 import { emitNotification } from "../realtime/socket.js";
 import { logActivity } from "./activityService.js";
 import { mailService } from "./mailService.js";
+import { visibleIssueFilter } from "./issueVisibility.js";
 async function cleanupOldNotifications(userId) {
     const userNotifications = await Notification.find({ user: userId }).sort({ createdAt: -1 }).skip(5);
     if (userNotifications.length > 0) {
@@ -34,6 +35,11 @@ function senderOptions(sender) {
         fromName: `${sender.name} via PIRNAV`,
         replyTo: sender.email
     };
+}
+function idString(value) {
+    if (value && typeof value === "object" && "_id" in value)
+        return String(value._id);
+    return String(value ?? "");
 }
 async function notifyAssignee(assignee, issueId, title, options = {}) {
     if (!assignee)
@@ -81,33 +87,38 @@ async function notifyUsers(filter, title, message, type, issueId) {
         await cleanupOldNotifications(user._id.toString());
     }
 }
-async function emailDevelopersAboutTesterIssue(issue, reporter, assignee) {
-    if (reporter.role !== "Tester")
-        return;
-    let developers = assignee
-        ? await User.find({
+async function developerFilterForIssue(issue, assignee) {
+    if (assignee) {
+        return {
             _id: assignee,
             role: "Developer",
             disabled: { $ne: true }
-        }).select("email name")
-        : [];
-    if (!developers.length) {
-        developers = await User.find({
-            role: "Developer",
-            disabled: { $ne: true }
-        }).select("email name");
+        };
     }
+    const projectId = idString(issue.project);
+    const project = projectId ? await Project.findById(projectId).select("members").lean() : null;
+    return {
+        _id: { $in: project?.members ?? [] },
+        role: "Developer",
+        disabled: { $ne: true }
+    };
+}
+async function emailDevelopersAboutTesterIssue(issue, reporter, assignee) {
+    if (reporter.role !== "Tester")
+        return;
+    const developers = await User.find(await developerFilterForIssue(issue, assignee)).select("email name");
     if (!developers.length)
         return;
-    const subject = `New Issue Assigned - ${issue.issueNumber}`;
+    const isBucketIssue = issue.status === "BUG_BUCKET";
+    const subject = `${isBucketIssue ? "New Bug in Bucket" : "New Issue Assigned"} - ${issue.issueNumber}`;
     for (const developer of developers) {
         const html = `
       <div style="font-family:Arial,sans-serif;max-width:700px">
-        <h2 style="color:#1976d2">New Issue Assigned</h2>
+        <h2 style="color:#1976d2">${isBucketIssue ? "New Bug in Bucket" : "New Issue Assigned"}</h2>
 
         <p>Hello <strong>${escapeHtml(developer.name)}</strong>,</p>
 
-        <p>A new issue has been created by the tester and assigned to you.</p>
+        <p>A new issue has been created by the tester and ${isBucketIssue ? "added to the developer bug bucket." : "assigned to you."}</p>
 
         <table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;width:100%">
           <tr>
@@ -121,6 +132,10 @@ async function emailDevelopersAboutTesterIssue(issue, reporter, assignee) {
           <tr>
             <td><strong>Status</strong></td>
             <td>${escapeHtml(issue.status)}</td>
+          </tr>
+          <tr>
+            <td><strong>Category</strong></td>
+            <td>${escapeHtml(issue.category)}</td>
           </tr>
           <tr>
             <td><strong>Priority</strong></td>
@@ -162,6 +177,8 @@ export const issueService = {
         if (user.role === "Tester") {
             delete payload.severity;
             delete payload.labels;
+            delete payload.assignee;
+            payload.status = "BUG_BUCKET";
         }
         const status = payload.status ?? (payload.assignee ? "ASSIGNED" : "OPEN");
         const issue = await Issue.create({
@@ -175,7 +192,7 @@ export const issueService = {
         await notifyUsers({ role: "Admin", disabled: { $ne: true } }, "Issue Created", issue.title, "Issue Created", issue._id.toString());
         if (user.role === "Tester") {
             await emailDevelopersAboutTesterIssue(issue, user, payload.assignee);
-            await notifyAssignee(payload.assignee, issue._id.toString(), issue.title, { sendEmail: false });
+            await notifyUsers(await developerFilterForIssue(issue, payload.assignee), "Bug Bucket", issue.title, "Issue Created", issue._id.toString());
         }
         else {
             await notifyAssignee(payload.assignee, issue._id.toString(), issue.title, { sender: user });
@@ -183,7 +200,7 @@ export const issueService = {
         return issue;
     },
     async update(id, data, user) {
-        const before = await Issue.findById(id);
+        const before = await Issue.findOne(await visibleIssueFilter(user, { _id: id }));
         if (!before)
             throw new AppError(404, "Issue not found");
         const update = { ...data };
@@ -197,6 +214,11 @@ export const issueService = {
         if (user.role === "Tester") {
             delete update.severity;
             delete update.labels;
+            delete update.assignee;
+        }
+        if (user.role === "Developer" && before.status === "BUG_BUCKET" && !before.assignee && update.status && update.status !== "BUG_BUCKET") {
+            update.assignee = user.id;
+            update.assignedBy = user.id;
         }
         if (update.assignee && update.assignee !== String(before.assignee)) {
             update.assignedBy = user.id;

@@ -28,6 +28,26 @@ const testerStatusOptions: { label: string; value: IssueStatus }[] = [
   { label: "Close issue after successful testing", value: "CLOSED" }
 ];
 
+const issueColumns = [
+  { key: "id", label: "ID", width: "8%" },
+  { key: "title", label: "Title", width: "13%" },
+  { key: "project", label: "Project", width: "13%" },
+  { key: "category", label: "Category", width: "10%" },
+  { key: "status", label: "Status", width: "13%" },
+  { key: "priority", label: "Priority", width: "8%" },
+  { key: "severity", label: "Severity", width: "8%" },
+  { key: "assignee", label: "Assignee", width: "15%" },
+  { key: "dueDate", label: "Due Date", width: "7%" },
+  { key: "actions", label: "Actions", width: "5%" }
+];
+
+const wrappingCellSx = {
+  overflowWrap: "anywhere",
+  wordBreak: "break-word",
+  whiteSpace: "normal",
+  verticalAlign: "top"
+};
+
 function uploadIssueScreenshots(issueId: string, screenshots: File[]) {
   const form = new FormData();
   screenshots.forEach((file) => form.append("files", file));
@@ -112,10 +132,19 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
   return (
     <>
       <PageHeader title={scope === "mine" ? "My Issues" : scope === "watchlist" ? "Watchlist" : "Issues"} action={canCreate ? createActionLabel : undefined} onAction={canCreate ? () => setCreateOpen(true) : undefined} />
-      <Table size="small">
+      <Table
+        size="small"
+        sx={{
+          width: "100%",
+          tableLayout: "fixed",
+          "& .MuiTableCell-root": { px: 1.25, py: 1.5 }
+        }}
+      >
         <TableHead>
           <TableRow>
-            {["ID", "Title", "Project", "Category", "Status", "Priority", "Severity", "Assignee", "Due Date", "Actions"].map((heading) => <TableCell key={heading}>{heading}</TableCell>)}
+            {issueColumns.map((column) => (
+              <TableCell key={column.key} sx={{ ...wrappingCellSx, width: column.width, fontWeight: 800 }}>{column.label}</TableCell>
+            ))}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -123,21 +152,21 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
             const watching = isWatching(issue, meId);
             return (
               <TableRow key={issue._id}>
-                <TableCell>{issue.issueNumber}</TableCell>
-                <TableCell>
+                <TableCell sx={wrappingCellSx}>{issue.issueNumber}</TableCell>
+                <TableCell sx={wrappingCellSx}>
                   <Tooltip title={issue.description || "No description provided"} arrow>
                     <Box sx={{ cursor: "pointer", textDecoration: "underline" }}>{issue.title}</Box>
                   </Tooltip>
                 </TableCell>
-                <TableCell>{issue.project?.name}</TableCell>
-                <TableCell>{issue.category}</TableCell>
-                <TableCell><Chip size="small" label={issueStatusLabel(issue.status)} /></TableCell>
-                <TableCell>{issue.priority}</TableCell>
-                <TableCell>{issue.severity}</TableCell>
-                <TableCell>{issue.assignee?.name ?? "Unassigned"}</TableCell>
-                <TableCell>{issue.dueDate ? new Date(issue.dueDate).toLocaleDateString() : ""}</TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={0.5}>
+                <TableCell sx={wrappingCellSx}>{issue.project?.name}</TableCell>
+                <TableCell sx={wrappingCellSx}>{issue.category}</TableCell>
+                <TableCell sx={wrappingCellSx}><Chip size="small" label={issueStatusLabel(issue.status)} sx={{ maxWidth: "100%", "& .MuiChip-label": { overflow: "hidden", textOverflow: "ellipsis" } }} /></TableCell>
+                <TableCell sx={wrappingCellSx}>{issue.priority}</TableCell>
+                <TableCell sx={wrappingCellSx}>{issue.severity}</TableCell>
+                <TableCell sx={wrappingCellSx}>{issue.assignee?.name ?? "Unassigned"}</TableCell>
+                <TableCell sx={wrappingCellSx}>{issue.dueDate ? new Date(issue.dueDate).toLocaleDateString() : ""}</TableCell>
+                <TableCell sx={{ verticalAlign: "top" }}>
+                  <Stack direction="row" spacing={0.5} sx={{ flexWrap: "wrap" }}>
                     <Tooltip title="View details and comments">
                       <IconButton size="small" aria-label="View issue details" onClick={() => setSelected(issue)}><ForumIcon /></IconButton>
                     </Tooltip>

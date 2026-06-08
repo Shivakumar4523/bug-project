@@ -119,7 +119,7 @@ export function AppLayout() {
     .filter((section) => section.items.length > 0);
 
   return (
-    <Box sx={{ display: "flex", minHeight: "100%" }}>
+    <Box sx={{ display: "flex", minHeight: "100%", width: "100%", overflowX: "hidden" }}>
       <Drawer variant="permanent" sx={{ width: drawerWidth, "& .MuiDrawer-paper": { width: drawerWidth, borderRight: "1px solid #dde3ea" } }}>
         <Box sx={{ px: 2, py: 2.2 }}>
           <Typography variant="h6">Pirnav Bug Tracking</Typography>
@@ -140,7 +140,7 @@ export function AppLayout() {
           ))}
         </List>
       </Drawer>
-      <Box sx={{ flex: 1 }}>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
         <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: "1px solid #dde3ea" }}>
           <Toolbar sx={{ gap: 2 }}>
             <Box sx={{ display: "flex", alignItems: "center", bgcolor: "#eef2f6", borderRadius: 1, px: 1.5, flex: 1, maxWidth: 560 }}>
@@ -185,7 +185,7 @@ export function AppLayout() {
             </Menu>
           </Toolbar>
         </AppBar>
-        <Box component="main" sx={{ p: 3 }}>
+        <Box component="main" sx={{ p: 3, minWidth: 0 }}>
           <Outlet />
         </Box>
       </Box>

@@ -107,9 +107,9 @@ export async function seedDefaults() {
     }
     for (const name of ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
         await Priority.updateOne({ name }, { name }, { upsert: true });
-    for (const name of ["OPEN", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"])
+    for (const name of ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"])
         await Status.updateOne({ name }, { name }, { upsert: true });
-    for (const name of ["Frontend", "Backend", "Infrastructure", "Security"])
+    for (const name of ["UI Bug", "Backend Bug", "API Bug", "Database Bug", "Performance Bug", "Security Bug", "Mobile Bug", "Enhancement Request"])
         await Category.updateOne({ name }, { name }, { upsert: true });
     await EmailTemplate.updateOne({ name: "Issue Assigned" }, { name: "Issue Assigned", subject: "PIRNAV issue assigned", body: "An issue has been assigned to you." }, { upsert: true });
 }

@@ -1,23 +1,30 @@
 import { Issue } from "../models/Issue.js";
 import { Project } from "../models/Project.js";
 import { User } from "../models/User.js";
+import { combineIssueFilters, visibleIssueFilter } from "../services/issueVisibility.js";
+function matchVisibleIssues(filter) {
+    return Object.keys(filter).length ? [{ $match: filter }] : [];
+}
 export const reportController = {
-    dashboard: (async (_req, res) => {
-        const [total, open, assigned, inProgress, fixed, readyForTesting, closed, totalProjects, totalUsers, byPriority, byStatus, byProject] = await Promise.all([
-            Issue.countDocuments(),
-            Issue.countDocuments({ status: "OPEN" }),
-            Issue.countDocuments({ status: "ASSIGNED" }),
-            Issue.countDocuments({ status: "IN_PROGRESS" }),
-            Issue.countDocuments({ status: "FIXED" }),
-            Issue.countDocuments({ status: "READY_FOR_TESTING" }),
-            Issue.countDocuments({ status: "CLOSED" }),
+    dashboard: (async (req, res) => {
+        const visibility = await visibleIssueFilter(req.user);
+        const statusFilter = (status) => combineIssueFilters(visibility, { status });
+        const [total, open, bugBucket, assigned, inProgress, fixed, readyForTesting, closed, totalProjects, totalUsers, byPriority, byStatus, byProject] = await Promise.all([
+            Issue.countDocuments(visibility),
+            Issue.countDocuments(statusFilter("OPEN")),
+            Issue.countDocuments(statusFilter("BUG_BUCKET")),
+            Issue.countDocuments(statusFilter("ASSIGNED")),
+            Issue.countDocuments(statusFilter("IN_PROGRESS")),
+            Issue.countDocuments(statusFilter("FIXED")),
+            Issue.countDocuments(statusFilter("READY_FOR_TESTING")),
+            Issue.countDocuments(statusFilter("CLOSED")),
             Project.countDocuments(),
             User.countDocuments(),
-            Issue.aggregate([{ $group: { _id: "$priority", value: { $sum: 1 } } }]),
-            Issue.aggregate([{ $group: { _id: "$status", value: { $sum: 1 } } }]),
-            Issue.aggregate([{ $group: { _id: "$project", issues: { $sum: 1 } } }])
+            Issue.aggregate([...matchVisibleIssues(visibility), { $group: { _id: "$priority", value: { $sum: 1 } } }]),
+            Issue.aggregate([...matchVisibleIssues(visibility), { $group: { _id: "$status", value: { $sum: 1 } } }]),
+            Issue.aggregate([...matchVisibleIssues(visibility), { $group: { _id: "$project", issues: { $sum: 1 } } }])
         ]);
-        res.json({ total, open, assigned, inProgress, fixed, readyForTesting, closed, totalProjects, totalUsers, byPriority, byStatus, byProject });
+        res.json({ total, open, bugBucket, assigned, inProgress, fixed, readyForTesting, closed, totalProjects, totalUsers, byPriority, byStatus, byProject });
     }),
     reports: (async (_req, res) => {
         const projects = await Project.find();

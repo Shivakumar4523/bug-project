@@ -6,6 +6,7 @@ import { AppError } from "../middleware/errorHandler.js";
 import { emitNotification } from "../realtime/socket.js";
 import { logActivity } from "./activityService.js";
 import { mailService } from "./mailService.js";
+import { visibleIssueFilter } from "./issueVisibility.js";
 
 async function cleanupOldNotifications(userId: string) {
   const userNotifications = await Notification.find({ user: userId }).sort({ createdAt: -1 }).skip(5);
@@ -37,6 +38,11 @@ function senderOptions(sender: Express.User) {
     fromName: `${sender.name} via PIRNAV`,
     replyTo: sender.email
   };
+}
+
+function idString(value: unknown) {
+  if (value && typeof value === "object" && "_id" in value) return String((value as { _id: unknown })._id);
+  return String(value ?? "");
 }
 
 async function notifyAssignee(
@@ -104,24 +110,29 @@ async function notifyUsers(
   }
 }
 
+async function developerFilterForIssue(issue: any, assignee?: string) {
+  if (assignee) {
+    return {
+      _id: assignee,
+      role: "Developer",
+      disabled: { $ne: true }
+    };
+  }
+
+  const projectId = idString(issue.project);
+  const project = projectId ? await Project.findById(projectId).select("members").lean() : null;
+
+  return {
+    _id: { $in: project?.members ?? [] },
+    role: "Developer",
+    disabled: { $ne: true }
+  };
+}
+
 async function emailDevelopersAboutTesterIssue(issue: any, reporter: Express.User, assignee?: string) {
   if (reporter.role !== "Tester") return;
 
-  let developers = assignee
-    ? await User.find({
-        _id: assignee,
-        role: "Developer",
-        disabled: { $ne: true }
-      }).select("email name")
-    : [];
-
-  if (!developers.length) {
-    developers = await User.find({
-      role: "Developer",
-      disabled: { $ne: true }
-    }).select("email name");
-  }
-
+  const developers = await User.find(await developerFilterForIssue(issue, assignee)).select("email name");
   if (!developers.length) return;
 
   const isBucketIssue = issue.status === "BUG_BUCKET";
@@ -213,7 +224,7 @@ export const issueService = {
     await notifyUsers({ role: "Admin", disabled: { $ne: true } }, "Issue Created", issue.title, "Issue Created", issue._id.toString());
     if (user.role === "Tester") {
       await emailDevelopersAboutTesterIssue(issue, user, payload.assignee);
-      await notifyUsers({ role: "Developer", disabled: { $ne: true } }, "Bug Bucket", issue.title, "Issue Created", issue._id.toString());
+      await notifyUsers(await developerFilterForIssue(issue, payload.assignee), "Bug Bucket", issue.title, "Issue Created", issue._id.toString());
     } else {
       await notifyAssignee(payload.assignee, issue._id.toString(), issue.title, { sender: user });
     }
@@ -221,7 +232,7 @@ export const issueService = {
   },
 
   async update(id: string, data: any, user: Express.User) {
-    const before = await Issue.findById(id);
+    const before = await Issue.findOne(await visibleIssueFilter(user, { _id: id }));
     if (!before) throw new AppError(404, "Issue not found");
 
     const update = { ...data };
