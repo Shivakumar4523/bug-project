@@ -25,6 +25,8 @@ export interface User {
   disabled?: boolean;
   smtpConfigured?: boolean;
   smtp?: UserSmtpSettings;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Project {
@@ -36,6 +38,8 @@ export interface Project {
   startDate?: string;
   endDate?: string;
   members?: User[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Issue {

@@ -6,6 +6,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { IssuesPage } from "./pages/IssuesPage";
 import { KanbanPage } from "./pages/KanbanPage";
 import { ProjectsPage } from "./pages/ProjectsPage";
+import { ManagementPage } from "./pages/ManagementPage";
 import { UsersPage } from "./pages/UsersPage";
 import { TeamsPage } from "./pages/TeamsPage";
 import { ReportsPage } from "./pages/ReportsPage";
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: "my-issues", element: <IssuesPage scope="mine" /> },
       { path: "watchlist", element: <IssuesPage scope="watchlist" /> },
       { path: "kanban", element: <KanbanPage /> },
+      { path: "management", element: <AdminOnly><ManagementPage /></AdminOnly> },
       { path: "projects", element: <AdminOnly><ProjectsPage /></AdminOnly> },
       { path: "milestones", element: <AdminOnly><SettingsPage resource="milestones" title="Milestones" /></AdminOnly> },
       { path: "teams", element: <AdminOnly><TeamsPage /></AdminOnly> },

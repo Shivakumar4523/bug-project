@@ -33,6 +33,7 @@ const sections: { label: string; items: { text: string; icon: ReactNode; to: str
     { text: "Reports", icon: <AssessmentIcon />, to: "/reports", roles: ["Admin"] }
   ] },
   { label: "MANAGEMENT", items: [
+    { text: "Overview", icon: <AssessmentIcon />, to: "/management", roles: ["Admin"] },
     { text: "Projects", icon: <AccountTreeIcon />, to: "/projects", roles: ["Admin"] },
     { text: "Milestones", icon: <FlagIcon />, to: "/milestones", roles: ["Admin"] },
     { text: "Teams", icon: <GroupsIcon />, to: "/teams", roles: ["Admin"] },
