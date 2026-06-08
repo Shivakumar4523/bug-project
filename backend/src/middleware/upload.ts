@@ -19,7 +19,7 @@ export const upload = multer({
     const ext = path.extname(file.originalname).toLowerCase();
     cb((allowed.has(ext) ? null : new AppError(400, "Unsupported file type")) as any, allowed.has(ext));
   },
-  limits: { fileSize: 20 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 export const excelUpload = multer({
