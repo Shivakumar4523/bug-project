@@ -16,10 +16,12 @@ import type { Issue, IssueCategory, IssueStatus, Project, ModulePage, User } fro
 
 const taskPriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 const taskStatuses: IssueStatus[] = ["OPEN", "ASSIGNED", "IN_PROGRESS", "FIXED", "CLOSED"];
+
 const categories: IssueCategory[] = [
   "UI Bug", "Backend Bug", "API Bug", "Database Bug",
   "Performance Bug", "Security Bug", "Mobile Bug", "Enhancement Request"
 ];
+
 const modulePages: ModulePage[] = [
   "Login Page", "Dashboard", "Reports", "User Management",
   "API", "Database", "Mobile UI", "Notifications", "Authentication", "Chat", "File Upload"
@@ -61,34 +63,41 @@ export function TaskForm({
   });
 
   const selectedProjectId = useWatch({ control, name: "project" });
-  const selectedPriority = watch("priority");
+
   const selectedProject = projects.find(p => p._id === selectedProjectId);
+
   const projectMembers = selectedProject?.members ?? [];
-  const projectMemberIds = new Set(projectMembers.map(m => typeof m === "string" ? m : m._id ?? m.id));
-  const availableDevs = users.filter(u => projectMemberIds.has(u._id ?? u.id));
+
+  const projectMemberIds = new Set(
+    projectMembers.map(m => (typeof m === "string" ? m : m._id ?? m.id))
+  );
+
+  const availableDevs = users.filter(u =>
+    projectMemberIds.has(u._id ?? u.id)
+  );
 
   return (
-    <Box component="form" onSubmit={handleSubmit((data) => {
-      const payload = {
-        ...data,
-        type: "Task"
-      };
-      if (!payload.assignee) delete payload.assignee;
-      if (!payload.dueDate) delete payload.dueDate;
-      onSubmit(payload, screenshots);
-    })}>
+    <Box
+      component="form"
+      onSubmit={handleSubmit((data) => {
+        const { assignee, dueDate, ...rest } = data;
+
+        const payload = {
+          ...rest,
+          type: "Task",
+          ...(assignee ? { assignee } : {}),
+          ...(dueDate ? { dueDate } : {})
+        };
+
+        onSubmit(payload, screenshots);
+      })}
+    >
       <Stack spacing={2.5} sx={{ pt: 1 }}>
 
-        {/* Task Header Badge */}
+        {/* Header */}
         <Stack direction="row" alignItems="center" spacing={1}>
           <AssignmentIcon color="primary" fontSize="small" />
-          <Chip
-            label="Task"
-            color="primary"
-            variant="outlined"
-            size="small"
-            sx={{ fontWeight: 700 }}
-          />
+          <Chip label="Task" color="primary" variant="outlined" size="small" />
           <Typography variant="caption" color="text.secondary">
             Admin Task Management
           </Typography>
@@ -96,7 +105,7 @@ export function TaskForm({
 
         <Divider />
 
-        {/* Task Title */}
+        {/* Title */}
         <TextField
           label="Task Title *"
           fullWidth
@@ -105,28 +114,25 @@ export function TaskForm({
           {...register("title", { required: true })}
         />
 
-        {/* Task Requirements / Description */}
+        {/* Description */}
         <TextField
           label="Task Requirements"
           multiline
           minRows={4}
           fullWidth
-          placeholder="Describe the task requirements, acceptance criteria, and any relevant context..."
           {...register("description")}
         />
 
-        {/* Module / Page */}
+        {/* Module */}
         <TextField
           select
           label="Module / Page *"
           fullWidth
           error={Boolean(errors.modulePage)}
-          helperText={errors.modulePage ? "Please select a module/page" : undefined}
           {...register("modulePage", { required: true })}
-          SelectProps={{ displayEmpty: true }}
         >
           <MenuItem value="">Select module/page</MenuItem>
-          {modulePages.map((mp) => (
+          {modulePages.map(mp => (
             <MenuItem key={mp} value={mp}>{mp}</MenuItem>
           ))}
         </TextField>
@@ -137,17 +143,15 @@ export function TaskForm({
           label="Category *"
           fullWidth
           error={Boolean(errors.category)}
-          helperText={errors.category ? "Please select a category" : undefined}
           {...register("category", { required: true })}
-          SelectProps={{ displayEmpty: true }}
         >
           <MenuItem value="">Select category</MenuItem>
-          {categories.map((c) => (
+          {categories.map(c => (
             <MenuItem key={c} value={c}>{c}</MenuItem>
           ))}
         </TextField>
 
-        {/* Project & Priority row */}
+        {/* Project + Priority */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             select
@@ -156,8 +160,10 @@ export function TaskForm({
             error={Boolean(errors.project)}
             {...register("project", { required: true })}
           >
-            {projects.map((p) => (
-              <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>
+            {projects.map(p => (
+              <MenuItem key={p._id} value={p._id}>
+                {p.name}
+              </MenuItem>
             ))}
           </TextField>
 
@@ -173,26 +179,21 @@ export function TaskForm({
                   size="small"
                   sx={{
                     bgcolor: priorityColors[String(val)] ?? "#525252",
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: 11
+                    color: "#fff"
                   }}
                 />
               )
             }}
           >
-            {taskPriorities.map((p) => (
+            {taskPriorities.map(p => (
               <MenuItem key={p} value={p}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: priorityColors[p] }} />
-                  <span>{p}</span>
-                </Stack>
+                {p}
               </MenuItem>
             ))}
           </TextField>
         </Stack>
 
-        {/* Suggested Developer & Status row */}
+        {/* Assignee + Status */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             select
@@ -201,12 +202,15 @@ export function TaskForm({
             {...register("assignee")}
           >
             <MenuItem value="">Unassigned</MenuItem>
-            {availableDevs.length > 0
-              ? availableDevs.map((u) => (
-                  <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>{u.name}</MenuItem>
-                ))
-              : <MenuItem disabled>No members in this project</MenuItem>
-            }
+            {availableDevs.length > 0 ? (
+              availableDevs.map(u => (
+                <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>
+                  {u.name}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>No members in this project</MenuItem>
+            )}
           </TextField>
 
           <TextField
@@ -215,8 +219,10 @@ export function TaskForm({
             fullWidth
             {...register("status")}
           >
-            {taskStatuses.map((s) => (
-              <MenuItem key={s} value={s}>{s.replace(/_/g, " ")}</MenuItem>
+            {taskStatuses.map(s => (
+              <MenuItem key={s} value={s}>
+                {s.replace(/_/g, " ")}
+              </MenuItem>
             ))}
           </TextField>
         </Stack>
@@ -244,9 +250,14 @@ export function TaskForm({
               type="file"
               accept="image/png,image/jpeg"
               multiple
-              onChange={(e) => setScreenshots(Array.from(e.target.files ?? []).slice(0, 5))}
+              onChange={(e) =>
+                setScreenshots(
+                  Array.from(e.target.files ?? []).slice(0, 5)
+                )
+              }
             />
           </Button>
+
           <Typography variant="caption" color="text.secondary">
             {screenshots.length
               ? `${screenshots.length} screenshot(s) selected`
@@ -262,10 +273,10 @@ export function TaskForm({
           type="submit"
           size="large"
           startIcon={<AssignmentIcon />}
-          sx={{ fontWeight: 700 }}
         >
           {initial?._id ? "Update Task" : "Create Task"}
         </Button>
+
       </Stack>
     </Box>
   );
