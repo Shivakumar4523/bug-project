@@ -2,12 +2,13 @@ import { useForm, useWatch } from "react-hook-form";
 import { useState } from "react";
 import { Box, Button, MenuItem, Stack, TextField, Typography } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import type { Issue, IssueCategory, IssueStatus, Project, Role, User } from "../types";
+import type { Issue, IssueCategory, IssueStatus, Project, Role, User, ModulePage } from "../types";
 import { issueStatusLabel } from "../utils/issues";
 
 const priorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"];
 const statuses: IssueStatus[] = ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"];
 const categories: IssueCategory[] = ["UI Bug", "Backend Bug", "API Bug", "Database Bug", "Performance Bug", "Security Bug", "Mobile Bug", "Enhancement Request"];
+const modulePages: ModulePage[] = ["Login Page", "Dashboard", "Reports", "User Management", "API", "Database", "Mobile UI", "Notifications", "Authentication", "Chat", "File Upload"];
 
 export function IssueForm({
   projects,
@@ -31,6 +32,7 @@ export function IssueForm({
     defaultValues: {
       type: initial?.type ?? "Bug",
       category: initial?.category ?? "",
+      modulePage: initial?.modulePage ?? "Login Page",
       title: initial?.title ?? "",
       description: initial?.description ?? "",
       project: initial?.project?._id ?? projects[0]?._id ?? "",
@@ -74,6 +76,15 @@ export function IssueForm({
       <Stack spacing={2}>
         {canSetCoreFields && (
           <>
+            <TextField
+              select
+              label="Module/Page"
+              error={Boolean(errors.modulePage)}
+              helperText={errors.modulePage ? "Select module/page" : undefined}
+              {...register("modulePage", { required: true })}
+            >
+              {modulePages.map((mp) => <MenuItem key={mp} value={mp}>{mp}</MenuItem>)}
+            </TextField>
             <TextField label="Title" {...register("title", { required: true })} />
             <TextField label="Description" multiline minRows={4} {...register("description")} />
             <TextField select label="Issue Type" {...register("type")}>{["Bug", "Task", "Story", "Improvement"].map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>

@@ -12,6 +12,7 @@ import { TeamsPage } from "./pages/TeamsPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { AccountSettingsPage } from "./pages/AccountSettingsPage";
+import { TasksPage } from "./pages/TasksPage";
 import { currentUser, getToken } from "./api/client";
 import type { User } from "./types";
 
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: "issues", element: <IssuesPage scope="all" /> },
       { path: "my-issues", element: <IssuesPage scope="mine" /> },
       { path: "watchlist", element: <IssuesPage scope="watchlist" /> },
+      { path: "tasks", element: <AdminOnly><TasksPage /></AdminOnly> },
       { path: "kanban", element: <KanbanPage /> },
       { path: "management", element: <ManagementPage /> },
       { path: "projects", element: <AdminOnly><ProjectsPage /></AdminOnly> },

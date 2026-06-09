@@ -113,7 +113,7 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
     return <DataState loading={issues.isPending || projects.isPending || users.isPending} error={issues.error || projects.error || users.error} />;
   }
 
-  const canCreate = me?.role === "Admin" || me?.role === "Tester";
+  const canCreate = me?.role === "Admin";
   const canEdit = me?.role === "Admin" || me?.role === "Tester";
   const canDelete = me?.role === "Admin";
   const statusOptions = me?.role === "Developer" ? developerStatusOptions : me?.role === "Tester" ? testerStatusOptions : [];

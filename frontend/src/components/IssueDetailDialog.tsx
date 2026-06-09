@@ -352,6 +352,13 @@ export function IssueDetailDialog({
                   value={<Chip size="small" label={issue.type} variant="outlined" />}
                 />
               )}
+              {issue.modulePage && (
+                <DetailRow
+                  icon={<CategoryIcon fontSize="small" />}
+                  label="Module/Page"
+                  value={<Chip size="small" label={issue.modulePage} variant="outlined" />}
+                />
+              )}
 
               <Divider sx={{ my: 1.5 }} />
 

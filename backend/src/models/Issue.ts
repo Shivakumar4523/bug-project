@@ -6,11 +6,14 @@ export const issueSeverities = ["MINOR", "MAJOR", "CRITICAL", "BLOCKER"] as cons
 export const issueStatuses = ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "REOPENED", "CLOSED"] as const;
 export const issueCategories = ["UI Bug", "Backend Bug", "API Bug", "Database Bug", "Performance Bug", "Security Bug", "Mobile Bug", "Enhancement Request"] as const;
 
+export const issueModulePages = ["Login Page", "Dashboard", "Reports", "User Management", "API", "Database", "Mobile UI", "Notifications", "Authentication", "Chat", "File Upload"] as const;
+
 const issueSchema = new Schema(
   {
     issueNumber: { type: String, required: true, unique: true },
     type: { type: String, enum: issueTypes, default: "Bug" },
     category: { type: String, enum: issueCategories, required: true },
+    modulePage: { type: String, enum: issueModulePages, required: true, default: "Login Page" },
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
     project: { type: Schema.Types.ObjectId, ref: "Project", required: true },

@@ -23,7 +23,7 @@ async function requireVisibleIssue(user: Express.User, id: unknown) {
 export const issueController = {
   list: (async (req, res) => {
     const filter: IssueFilter = {};
-    for (const key of ["project", "assignee", "category", "priority", "severity", "status", "reporter"]) {
+    for (const key of ["project", "assignee", "category", "modulePage", "priority", "severity", "status", "reporter"]) {
       if (req.query[key]) (filter as Record<string, unknown>)[key] = req.query[key];
     }
     const issues = await Issue.find(await visibleIssueFilter(req.user!, filter)).populate(populate).sort({ updatedAt: -1 });

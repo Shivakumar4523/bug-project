@@ -4,6 +4,7 @@ import { AppBar, Avatar, Badge, Box, Divider, Drawer, IconButton, InputBase, Lis
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import AccountTreeIcon from "@mui/icons-material/AccountTree";
@@ -30,6 +31,7 @@ const sections: { label: string; items: { text: string; icon: ReactNode; to: str
     { text: "Issues", icon: <BugReportIcon />, to: "/issues" },
     { text: "Kanban", icon: <ViewKanbanIcon />, to: "/kanban" },
     { text: "My Issues", icon: <AssignmentIndIcon />, to: "/my-issues" },
+    { text: "Tasks", icon: <AssignmentIcon />, to: "/tasks", roles: ["Admin"] },
     { text: "Watchlist", icon: <VisibilityIcon />, to: "/watchlist" },
     { text: "Reports", icon: <AssessmentIcon />, to: "/reports", roles: ["Admin"] }
   ] },

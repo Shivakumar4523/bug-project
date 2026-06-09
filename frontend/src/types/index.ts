@@ -43,11 +43,14 @@ export interface Project {
   updatedAt?: string;
 }
 
+export type ModulePage = "Login Page" | "Dashboard" | "Reports" | "User Management" | "API" | "Database" | "Mobile UI" | "Notifications" | "Authentication" | "Chat" | "File Upload";
+
 export interface Issue {
   _id: string;
   issueNumber: string;
   type: "Bug" | "Task" | "Story" | "Improvement";
   category: IssueCategory;
+  modulePage: ModulePage;
   title: string;
   description?: string;
   project: Project;
