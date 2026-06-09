@@ -1,4 +1,7 @@
 import nodemailer from "nodemailer";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { env } from "../config/env.js";
 import { User } from "../models/User.js";
 import { decryptSecret } from "../utils/secretCrypto.js";
@@ -34,11 +37,37 @@ function defaultSmtpSender() {
         pass: env.smtp.pass
     };
 }
+function logEmailToFile(to, subject, html, status) {
+    try {
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const workspaceRootLog = path.resolve(__dirname, "../../../emails.log");
+        const cleanHtml = html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        const logEntry = [
+            `================================================================`,
+            `Date: ${new Date().toISOString()}`,
+            `Status: ${status}`,
+            `To: ${to}`,
+            `Subject: ${subject}`,
+            `Content (HTML):`,
+            html,
+            `Content (Text):`,
+            cleanHtml,
+            `================================================================\n\n`
+        ].join("\n");
+        fs.appendFileSync(workspaceRootLog, logEntry, "utf8");
+        console.log(`[Email Logged to Workspace Root] -> ${workspaceRootLog}`);
+    }
+    catch (err) {
+        console.error("Failed to log email to file:", err);
+    }
+}
 export const mailService = {
     async send(to, subject, html, options = {}) {
         const sender = (await userSmtpSender(options.senderUserId)) ?? defaultSmtpSender();
         if (!sender) {
             console.log(`[email skipped] ${to} | ${subject}`);
+            logEmailToFile(to, subject, html, "SKIPPED (No SMTP configured)");
             return;
         }
         const transporter = nodemailer.createTransport({
@@ -60,9 +89,11 @@ export const mailService = {
                 html
             });
             console.log("Email sent:", info.messageId);
+            logEmailToFile(to, subject, html, `SENT (Message ID: ${info.messageId})`);
         }
         catch (error) {
             console.error("SMTP Error:", error);
+            logEmailToFile(to, subject, html, `FAILED (SMTP Error: ${error instanceof Error ? error.message : String(error)})`);
             throw error;
         }
     }
