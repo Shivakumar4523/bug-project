@@ -12,7 +12,14 @@ import {
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import type { Issue, IssueCategory, IssueStatus, Project, ModulePage, User } from "../types";
+import type {
+  Issue,
+  IssueCategory,
+  IssueStatus,
+  Project,
+  ModulePage,
+  User
+} from "../types";
 
 /* ---------------- CONSTANTS ---------------- */
 
@@ -58,7 +65,7 @@ const priorityColors: Record<string, string> = {
   CRITICAL: "#da1e28"
 };
 
-/* ---------------- TYPES ---------------- */
+/* ---------------- FORM TYPE ---------------- */
 
 type FormValues = {
   type: string;
@@ -100,7 +107,7 @@ export function TaskForm({
       description: initial?.description ?? "",
       modulePage: initial?.modulePage ?? "",
       category: initial?.category ?? "",
-      project: initial?.project?._id ?? projects[0]?._id ?? "",
+      project: initial?.project?._id ?? projects?.[0]?._id ?? "",
       assignee: initial?.assignee?._id ?? "",
       priority: initial?.priority ?? "MEDIUM",
       status: initial?.status ?? "OPEN",
@@ -179,7 +186,9 @@ export function TaskForm({
         >
           <MenuItem value="">Select module/page</MenuItem>
           {modulePages.map(mp => (
-            <MenuItem key={mp} value={mp}>{mp}</MenuItem>
+            <MenuItem key={mp} value={mp}>
+              {mp}
+            </MenuItem>
           ))}
         </TextField>
 
@@ -193,7 +202,9 @@ export function TaskForm({
         >
           <MenuItem value="">Select category</MenuItem>
           {categories.map(c => (
-            <MenuItem key={c} value={c}>{c}</MenuItem>
+            <MenuItem key={c} value={c}>
+              {c}
+            </MenuItem>
           ))}
         </TextField>
 
@@ -241,8 +252,14 @@ export function TaskForm({
 
         {/* ASSIGNEE + STATUS */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <TextField select label="Suggested Developer" fullWidth {...register("assignee")}>
+          <TextField
+            select
+            label="Suggested Developer"
+            fullWidth
+            {...register("assignee")}
+          >
             <MenuItem value="">Unassigned</MenuItem>
+
             {availableDevs.length > 0 ? (
               availableDevs.map(u => (
                 <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>
@@ -254,7 +271,12 @@ export function TaskForm({
             )}
           </TextField>
 
-          <TextField select label="Status" fullWidth {...register("status")}>
+          <TextField
+            select
+            label="Status"
+            fullWidth
+            {...register("status")}
+          >
             {taskStatuses.map(s => (
               <MenuItem key={s} value={s}>
                 {s.replace(/_/g, " ")}
@@ -274,7 +296,12 @@ export function TaskForm({
 
         {/* SCREENSHOTS */}
         <Stack direction="row" spacing={1} alignItems="center">
-          <Button component="label" startIcon={<AttachFileIcon />} variant="outlined" size="small">
+          <Button
+            component="label"
+            startIcon={<AttachFileIcon />}
+            variant="outlined"
+            size="small"
+          >
             Attach Screenshots
             <input
               hidden
