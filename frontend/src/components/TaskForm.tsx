@@ -14,17 +14,41 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import type { Issue, IssueCategory, IssueStatus, Project, ModulePage, User } from "../types";
 
+/* ---------------- CONSTANTS ---------------- */
+
 const taskPriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
-const taskStatuses: IssueStatus[] = ["OPEN", "ASSIGNED", "IN_PROGRESS", "FIXED", "CLOSED"];
+
+const taskStatuses: IssueStatus[] = [
+  "OPEN",
+  "ASSIGNED",
+  "IN_PROGRESS",
+  "FIXED",
+  "CLOSED"
+];
 
 const categories: IssueCategory[] = [
-  "UI Bug", "Backend Bug", "API Bug", "Database Bug",
-  "Performance Bug", "Security Bug", "Mobile Bug", "Enhancement Request"
+  "UI Bug",
+  "Backend Bug",
+  "API Bug",
+  "Database Bug",
+  "Performance Bug",
+  "Security Bug",
+  "Mobile Bug",
+  "Enhancement Request"
 ];
 
 const modulePages: ModulePage[] = [
-  "Login Page", "Dashboard", "Reports", "User Management",
-  "API", "Database", "Mobile UI", "Notifications", "Authentication", "Chat", "File Upload"
+  "Login Page",
+  "Dashboard",
+  "Reports",
+  "User Management",
+  "API",
+  "Database",
+  "Mobile UI",
+  "Notifications",
+  "Authentication",
+  "Chat",
+  "File Upload"
 ];
 
 const priorityColors: Record<string, string> = {
@@ -33,6 +57,23 @@ const priorityColors: Record<string, string> = {
   HIGH: "#ff832b",
   CRITICAL: "#da1e28"
 };
+
+/* ---------------- TYPES ---------------- */
+
+type FormValues = {
+  type: string;
+  title: string;
+  description: string;
+  modulePage: string;
+  category: string;
+  project: string;
+  assignee?: string;
+  priority: string;
+  status: string;
+  dueDate?: string;
+};
+
+/* ---------------- COMPONENT ---------------- */
 
 export function TaskForm({
   projects,
@@ -47,7 +88,12 @@ export function TaskForm({
 }) {
   const [screenshots, setScreenshots] = useState<File[]>([]);
 
-  const { register, handleSubmit, control, watch, formState: { errors } } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors }
+  } = useForm<FormValues>({
     defaultValues: {
       type: "Task",
       title: initial?.title ?? "",
@@ -69,32 +115,33 @@ export function TaskForm({
   const projectMembers = selectedProject?.members ?? [];
 
   const projectMemberIds = new Set(
-    projectMembers.map(m => (typeof m === "string" ? m : m._id ?? m.id))
+    projectMembers.map(m =>
+      typeof m === "string" ? m : m._id ?? m.id
+    )
   );
 
   const availableDevs = users.filter(u =>
     projectMemberIds.has(u._id ?? u.id)
   );
 
+  /* ---------------- SUBMIT ---------------- */
+
+  const onFormSubmit = (data: FormValues) => {
+    const payload = {
+      ...data,
+      type: "Task",
+      assignee: data.assignee || undefined,
+      dueDate: data.dueDate || undefined
+    };
+
+    onSubmit(payload, screenshots);
+  };
+
   return (
-    <Box
-      component="form"
-      onSubmit={handleSubmit((data) => {
-        const { assignee, dueDate, ...rest } = data;
-
-        const payload = {
-          ...rest,
-          type: "Task",
-          ...(assignee ? { assignee } : {}),
-          ...(dueDate ? { dueDate } : {})
-        };
-
-        onSubmit(payload, screenshots);
-      })}
-    >
+    <Box component="form" onSubmit={handleSubmit(onFormSubmit)}>
       <Stack spacing={2.5} sx={{ pt: 1 }}>
 
-        {/* Header */}
+        {/* HEADER */}
         <Stack direction="row" alignItems="center" spacing={1}>
           <AssignmentIcon color="primary" fontSize="small" />
           <Chip label="Task" color="primary" variant="outlined" size="small" />
@@ -105,16 +152,15 @@ export function TaskForm({
 
         <Divider />
 
-        {/* Title */}
+        {/* TITLE */}
         <TextField
           label="Task Title *"
           fullWidth
           error={Boolean(errors.title)}
-          helperText={errors.title ? "Title is required" : undefined}
           {...register("title", { required: true })}
         />
 
-        {/* Description */}
+        {/* DESCRIPTION */}
         <TextField
           label="Task Requirements"
           multiline
@@ -123,7 +169,7 @@ export function TaskForm({
           {...register("description")}
         />
 
-        {/* Module */}
+        {/* MODULE */}
         <TextField
           select
           label="Module / Page *"
@@ -137,7 +183,7 @@ export function TaskForm({
           ))}
         </TextField>
 
-        {/* Category */}
+        {/* CATEGORY */}
         <TextField
           select
           label="Category *"
@@ -151,7 +197,7 @@ export function TaskForm({
           ))}
         </TextField>
 
-        {/* Project + Priority */}
+        {/* PROJECT + PRIORITY */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             select
@@ -193,14 +239,9 @@ export function TaskForm({
           </TextField>
         </Stack>
 
-        {/* Assignee + Status */}
+        {/* ASSIGNEE + STATUS */}
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <TextField
-            select
-            label="Suggested Developer"
-            fullWidth
-            {...register("assignee")}
-          >
+          <TextField select label="Suggested Developer" fullWidth {...register("assignee")}>
             <MenuItem value="">Unassigned</MenuItem>
             {availableDevs.length > 0 ? (
               availableDevs.map(u => (
@@ -213,12 +254,7 @@ export function TaskForm({
             )}
           </TextField>
 
-          <TextField
-            select
-            label="Status"
-            fullWidth
-            {...register("status")}
-          >
+          <TextField select label="Status" fullWidth {...register("status")}>
             {taskStatuses.map(s => (
               <MenuItem key={s} value={s}>
                 {s.replace(/_/g, " ")}
@@ -227,7 +263,7 @@ export function TaskForm({
           </TextField>
         </Stack>
 
-        {/* Due Date */}
+        {/* DUE DATE */}
         <TextField
           label="Due Date"
           type="date"
@@ -236,14 +272,9 @@ export function TaskForm({
           {...register("dueDate")}
         />
 
-        {/* Screenshots */}
+        {/* SCREENSHOTS */}
         <Stack direction="row" spacing={1} alignItems="center">
-          <Button
-            component="label"
-            startIcon={<AttachFileIcon />}
-            variant="outlined"
-            size="small"
-          >
+          <Button component="label" startIcon={<AttachFileIcon />} variant="outlined" size="small">
             Attach Screenshots
             <input
               hidden
@@ -251,9 +282,7 @@ export function TaskForm({
               accept="image/png,image/jpeg"
               multiple
               onChange={(e) =>
-                setScreenshots(
-                  Array.from(e.target.files ?? []).slice(0, 5)
-                )
+                setScreenshots(Array.from(e.target.files ?? []).slice(0, 5))
               }
             />
           </Button>
@@ -267,7 +296,7 @@ export function TaskForm({
 
         <Divider />
 
-        {/* Submit */}
+        {/* SUBMIT */}
         <Button
           variant="contained"
           type="submit"
