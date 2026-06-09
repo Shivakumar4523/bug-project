@@ -5,6 +5,15 @@ import { roles, User } from "../models/User.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { logActivity } from "../services/activityService.js";
 import { encryptSecret } from "../utils/secretCrypto.js";
+import { mailService } from "../services/mailService.js";
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
 function smtpConfigured(smtp) {
     return Boolean(smtp?.enabled && smtp.host && smtp.user && smtp.passEncrypted);
 }
@@ -243,5 +252,23 @@ export const userController = {
         await User.findByIdAndDelete(req.params.id);
         await logActivity(req.user?.id, "User Deleted", "User", String(req.params.id));
         res.status(204).send();
+    }),
+    testSmtp: (async (req, res) => {
+        const user = await User.findById(req.user.id);
+        if (!user)
+            throw new AppError(404, "User not found");
+        const smtp = user.smtp;
+        if (!smtp?.enabled || !smtp.host || !smtp.user || !smtp.passEncrypted) {
+            throw new AppError(400, "SMTP sender is not fully configured. Please fill in host, username, password and enable it first.");
+        }
+        await mailService.send(user.email, "PIRNAV – SMTP Test Email", `<div style="font-family:Arial,sans-serif;max-width:600px;padding:24px">
+        <h2 style="color:#1976d2;margin-top:0">&#10003; SMTP Configuration Working</h2>
+        <p>Hello <strong>${escapeHtml(user.name)}</strong>,</p>
+        <p>Your personal SMTP sender is configured correctly on PIRNAV Bug Tracker.</p>
+        <p>Emails (issue assignments, notifications, etc.) will automatically be sent <strong>from your email address</strong> (${escapeHtml(smtp.fromName || user.name)} &lt;${escapeHtml(smtp.user)}&gt;).</p>
+        <hr style="border:none;border-top:1px solid #eee;margin:20px 0"/>
+        <p style="color:#888;font-size:12px">Tested at: ${new Date().toLocaleString()}</p>
+      </div>`, { senderUserId: user._id.toString() });
+        res.json({ message: `Test email sent to ${user.email}` });
     })
 };
