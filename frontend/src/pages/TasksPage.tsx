@@ -33,7 +33,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useState } from "react";
 import { api, crud, currentUser } from "../api/client";
 import { DataState } from "../components/DataState";
-import { IssueForm } from "../components/IssueForm";
+import { TaskForm } from "../components/TaskForm";
 import { IssueDetailDialog } from "../components/IssueDetailDialog";
 import { PageHeader } from "../components/PageHeader";
 import type { Issue, Project, User } from "../types";
@@ -280,29 +280,26 @@ export function TasksPage() {
       </TableContainer>
 
       {/* Task Dialogs */}
-      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} fullWidth maxWidth="md">
-        <DialogTitle>Create Task</DialogTitle>
+      <Dialog open={createOpen} onClose={() => setCreateOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 700, pb: 0 }}>Create Task</DialogTitle>
         <DialogContent>
-          <IssueForm 
-            projects={projects.data!} 
-            users={users.data!} 
-            initial={{ type: "Task" }} 
-            currentUserRole={me?.role} 
-            onSubmit={(data, screenshots) => create.mutate({ data, screenshots })} 
+          <TaskForm
+            projects={projects.data!}
+            users={users.data!}
+            onSubmit={(data, screenshots) => create.mutate({ data, screenshots })}
           />
         </DialogContent>
       </Dialog>
 
-      <Dialog open={Boolean(editing)} onClose={() => setEditing(null)} fullWidth maxWidth="md">
-        <DialogTitle>Edit Task</DialogTitle>
+      <Dialog open={Boolean(editing)} onClose={() => setEditing(null)} fullWidth maxWidth="sm">
+        <DialogTitle sx={{ fontWeight: 700, pb: 0 }}>Edit Task</DialogTitle>
         <DialogContent>
           {editing && (
-            <IssueForm 
-              projects={projects.data!} 
-              users={users.data!} 
-              initial={editing} 
-              currentUserRole={me?.role} 
-              onSubmit={(data, screenshots) => update.mutate({ id: editing._id, data, screenshots })} 
+            <TaskForm
+              projects={projects.data!}
+              users={users.data!}
+              initial={editing}
+              onSubmit={(data, screenshots) => update.mutate({ id: editing._id, data, screenshots })}
             />
           )}
         </DialogContent>

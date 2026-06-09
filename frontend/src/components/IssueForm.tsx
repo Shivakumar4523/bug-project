@@ -86,8 +86,10 @@ export function IssueForm({
               {modulePages.map((mp) => <MenuItem key={mp} value={mp}>{mp}</MenuItem>)}
             </TextField>
             <TextField label="Title" {...register("title", { required: true })} />
-            <TextField label="Description" multiline minRows={4} {...register("description")} />
-            <TextField select label="Issue Type" {...register("type")}>{["Bug", "Task", "Story", "Improvement"].map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>
+            <TextField label={initial?.type === "Task" ? "Task Requirements" : "Steps to Reproduce"} multiline minRows={4} {...register("description")} />
+            {initial?.type !== "Task" && (
+              <TextField select label="Issue Type" {...register("type")}>{["Bug", "Task", "Story", "Improvement"].map((x) => <MenuItem key={x} value={x}>{x}</MenuItem>)}</TextField>
+            )}
             <TextField
               select
               label="Category"
@@ -100,7 +102,7 @@ export function IssueForm({
               {categories.map((category) => <MenuItem key={category} value={category}>{category}</MenuItem>)}
             </TextField>
             <TextField select label="Project" {...register("project")}>{projects.map((p) => <MenuItem key={p._id} value={p._id}>{p.name}</MenuItem>)}</TextField>
-            {canSetAssignee && <TextField select label="Assignee" {...register("assignee")}><MenuItem value="">Unassigned</MenuItem>{availableAssignees.length > 0 ? availableAssignees.map((u) => <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>{u.name}</MenuItem>) : <MenuItem disabled>No members in this project</MenuItem>}</TextField>}
+            {canSetAssignee && <TextField select label="Suggested Developer" {...register("assignee")}><MenuItem value="">Unassigned</MenuItem>{availableAssignees.length > 0 ? availableAssignees.map((u) => <MenuItem key={u._id ?? u.id} value={u._id ?? u.id}>{u.name}</MenuItem>) : <MenuItem disabled>No members in this project</MenuItem>}</TextField>}
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ xs: "stretch", sm: "center" }}>
               <Button component="label" startIcon={<AttachFileIcon />} variant="outlined">
                 Screenshots
@@ -119,7 +121,9 @@ export function IssueForm({
           </>
         )}
         {canSetStatusOnly && <TextField select label="Status" {...register("status")}>{statuses.map((x) => <MenuItem key={x} value={x}>{issueStatusLabel(x, currentUserRole)}</MenuItem>)}</TextField>}
-        <Button variant="contained" type="submit">Save Issue</Button>
+        <Button variant="contained" type="submit">
+          Save {initial?.type === "Task" ? "Task" : "Issue"}
+        </Button>
       </Stack>
     </Box>
   );
