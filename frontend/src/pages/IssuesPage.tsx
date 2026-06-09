@@ -155,7 +155,14 @@ export function IssuesPage({ scope }: { scope: "all" | "mine" | "watchlist" }) {
               const watching = isWatching(issue, meId);
               return (
                 <TableRow key={issue._id}>
-                  <TableCell sx={wrappingCellSx}>{issue.issueNumber}</TableCell>
+                  <TableCell sx={wrappingCellSx}>
+                    <Box
+                      sx={{ cursor: "pointer", color: "primary.main", fontWeight: 700, "&:hover": { textDecoration: "underline" } }}
+                      onClick={() => setSelected(issue)}
+                    >
+                      {issue.issueNumber}
+                    </Box>
+                  </TableCell>
                   <TableCell sx={wrappingCellSx}>
                     <Tooltip title={issue.description || "No description provided"} arrow>
                       <Box sx={{ cursor: "pointer", textDecoration: "underline" }} onClick={() => setSelected(issue)}>{issue.title}</Box>
