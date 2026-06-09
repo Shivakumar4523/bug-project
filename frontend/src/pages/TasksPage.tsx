@@ -27,7 +27,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import ForumIcon from "@mui/icons-material/Forum";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useState } from "react";
@@ -36,6 +36,7 @@ import { DataState } from "../components/DataState";
 import { TaskForm } from "../components/TaskForm";
 import { IssueDetailDialog } from "../components/IssueDetailDialog";
 import { PageHeader } from "../components/PageHeader";
+import { StatCard } from "../components/StatCard";
 import type { Issue, Project, User } from "../types";
 import { issueStatusLabel } from "../utils/issues";
 
@@ -126,58 +127,18 @@ export function TasksPage() {
       />
 
       {/* Stats Cards Section */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ borderLeft: "4px solid #0f62fe", bgcolor: "background.paper" }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>Total Tasks</Typography>
-                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>{totalTasks}</Typography>
-                </Box>
-                <AssignmentIcon color="primary" sx={{ fontSize: 40, opacity: 0.8 }} />
-              </Stack>
-            </CardContent>
-          </Card>
+          <StatCard label="Total Tasks" value={totalTasks} icon={<AssignmentIcon />} color="#0f62fe" />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ borderLeft: "4px solid #da1e28", bgcolor: "background.paper" }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>Open Tasks</Typography>
-                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>{openTasks}</Typography>
-                </Box>
-                <ErrorOutlineIcon error="true" sx={{ fontSize: 40, color: "#da1e28", opacity: 0.8 }} />
-              </Stack>
-            </CardContent>
-          </Card>
+          <StatCard label="Open Tasks" value={openTasks} icon={<ErrorOutlineIcon />} color="#da1e28" />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ borderLeft: "4px solid #ff832b", bgcolor: "background.paper" }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>In Progress</Typography>
-                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>{inProgressTasks}</Typography>
-                </Box>
-                <HourglassEmptyIcon sx={{ fontSize: 40, color: "#ff832b", opacity: 0.8 }} />
-              </Stack>
-            </CardContent>
-          </Card>
+          <StatCard label="In Progress" value={inProgressTasks} icon={<HourglassEmptyIcon />} color="#ff832b" />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card sx={{ borderLeft: "4px solid #24a148", bgcolor: "background.paper" }}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Box>
-                  <Typography variant="body2" color="text.secondary" fontWeight={600}>Completed Tasks</Typography>
-                  <Typography variant="h4" sx={{ mt: 1, fontWeight: 700 }}>{completedTasks}</Typography>
-                </Box>
-                <AssignmentTurnedInIcon sx={{ fontSize: 40, color: "#24a148", opacity: 0.8 }} />
-              </Stack>
-            </CardContent>
-          </Card>
+          <StatCard label="Completed Tasks" value={completedTasks} icon={<TaskAltIcon />} color="#24a148" />
         </Grid>
       </Grid>
 

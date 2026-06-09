@@ -1,15 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import { Box, Card, CardContent, Chip, Grid2 as Grid, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Card, CardContent, Chip, Grid2 as Grid, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
 import { useState } from "react";
 import { Line, LineChart, Pie, PieChart, ResponsiveContainer, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import PeopleIcon from "@mui/icons-material/People";
+import FolderIcon from "@mui/icons-material/Folder";
 import { api, currentUser } from "../api/client";
 import { DataState } from "../components/DataState";
 import { IssueDetailDialog } from "../components/IssueDetailDialog";
 import { PageHeader } from "../components/PageHeader";
+import { StatCard } from "../components/StatCard";
 import type { Issue, User } from "../types";
 import { issueStatusLabel } from "../utils/issues";
 
-const colors = ["#da1e28", "#ff832b", "#0f62fe", "#24a148", "#8a3ffc", "#525252"];
+const colors = ["#0f62fe", "#da1e28", "#ff832b", "#24a148", "#525252"];
 
 export function DashboardPage() {
   const me = currentUser<User>();
@@ -19,16 +26,16 @@ export function DashboardPage() {
   if (stats.isPending || issues.isPending || stats.error || issues.error) return <DataState loading={stats.isPending || issues.isPending} error={stats.error || issues.error} />;
   const bugBucketLabel = me?.role === "Tester" ? "Reported Bug" : "Bug Bucket";
   const cards = [
-    ["Total Projects", stats.data!.totalProjects],
-    ["Total Issues", stats.data!.total],
-    ["Open Issues", stats.data!.open],
-    [bugBucketLabel, stats.data!.bugBucket],
-    ["Assigned Issues", stats.data!.assigned],
-    ["In Progress", stats.data!.inProgress],
-    ["Fixed Issues", stats.data!.fixed],
-    ["Ready For Testing", stats.data!.readyForTesting],
-    ["Closed Issues", stats.data!.closed],
-    ["Total Users", stats.data!.totalUsers]
+    { label: "Total Projects", value: stats.data!.totalProjects, icon: <FolderIcon />, color: "#525252" },
+    { label: "Total Issues", value: stats.data!.total, icon: <AssignmentIcon />, color: "#0f62fe" },
+    { label: "Open Issues", value: stats.data!.open, icon: <ErrorOutlineIcon />, color: "#da1e28" },
+    { label: bugBucketLabel, value: stats.data!.bugBucket, icon: <ErrorOutlineIcon />, color: "#da1e28" },
+    { label: "Assigned Issues", value: stats.data!.assigned, icon: <ErrorOutlineIcon />, color: "#da1e28" },
+    { label: "In Progress", value: stats.data!.inProgress, icon: <HourglassEmptyIcon />, color: "#ff832b" },
+    { label: "Fixed Issues", value: stats.data!.fixed, icon: <TaskAltIcon />, color: "#24a148" },
+    { label: "Ready For Testing", value: stats.data!.readyForTesting, icon: <TaskAltIcon />, color: "#24a148" },
+    { label: "Closed Issues", value: stats.data!.closed, icon: <TaskAltIcon />, color: "#24a148" },
+    { label: "Total Users", value: stats.data!.totalUsers, icon: <PeopleIcon />, color: "#525252" }
   ];
   const lineData = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => ({ day, issues: Math.max(0, (stats.data!.total ?? 0) - 5 + i * 2) }));
   const priorityData = stats.data!.byPriority.map((x: any) => ({ name: x._id, value: x.value }));
@@ -37,10 +44,10 @@ export function DashboardPage() {
   return (
     <>
       <PageHeader title="Dashboard" />
-      <Grid container spacing={2}>
-        {cards.map(([label, value]) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={label}>
-            <Card><CardContent><Typography color="text.secondary">{label}</Typography><Typography variant="h4">{value}</Typography></CardContent></Card>
+      <Grid container spacing={3}>
+        {cards.map((card) => (
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.label}>
+            <StatCard {...card} />
           </Grid>
         ))}
         <Grid size={{ xs: 12, md: 7 }}>
