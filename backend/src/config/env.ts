@@ -10,7 +10,7 @@ export const env = {
   accessTtl: process.env.ACCESS_TOKEN_TTL ?? "15m",
   refreshTtl: process.env.REFRESH_TOKEN_TTL ?? "7d",
   clientUrl: process.env.CLIENT_URL ?? "http://localhost:5173",
-  adminEmail: process.env.ADMIN_EMAIL ?? "admin@pirnav.com",
+  adminEmail: process.env.ADMIN_EMAIL ?? "shyam@pirnav.com",
   adminPassword: process.env.ADMIN_PASSWORD ?? "Pirnav@12345",
   smtp: {
     host: process.env.SMTP_HOST,

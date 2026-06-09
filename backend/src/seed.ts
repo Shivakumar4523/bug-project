@@ -82,11 +82,11 @@ export async function seedDefaults() {
   }
 
   await User.updateOne(
-    { email: "admin@pirnav.com" },
+    { email: "shyam@pirnav.com" },
     {
       $set: {
-        name: "PIRNAV Admin",
-        email: "admin@pirnav.com",
+        name: "Shyam",
+        email: "shyam@pirnav.com",
         passwordHash: await bcrypt.hash(env.adminPassword, 12),
         role: "Admin",
         department: "Administration",
