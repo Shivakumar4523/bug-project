@@ -4,11 +4,14 @@ import { ReactElement } from "react";
 interface StatCardProps {
   label: string;
   value: string | number;
-  icon: ReactElement<SvgIconProps>;
-  color: string;
+  icon?: ReactElement<SvgIconProps>;
+  color?: string;
+  variant?: "default" | "plain";
 }
 
-export function StatCard({ label, value, icon, color }: StatCardProps) {
+export function StatCard({ label, value, icon, color = "#525252", variant = "default" }: StatCardProps) {
+  const isPlain = variant === "plain";
+
   return (
     <Card
       sx={{
@@ -27,46 +30,55 @@ export function StatCard({ label, value, icon, color }: StatCardProps) {
           left: 0,
           top: 0,
           bottom: 0,
-          width: "5px",
+          width: isPlain ? 0 : "5px",
           backgroundColor: color,
         }
       }}
     >
       <CardContent sx={{ height: "100%", py: "28px !important", px: 3 }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2} sx={{ height: "100%" }}>
+        <Stack
+          direction="row"
+          justifyContent={isPlain ? "flex-start" : "space-between"}
+          alignItems={isPlain ? "flex-start" : "center"}
+          spacing={2}
+          sx={{ height: "100%" }}
+        >
           <Box sx={{ minWidth: 0 }}>
             <Typography
               variant="body1"
               sx={{
-                color: "#26364a",
-                fontWeight: 600,
+                color: isPlain ? "#3f3f46" : "#26364a",
+                fontWeight: isPlain ? 400 : 600,
+                fontSize: isPlain ? { xs: 22, md: 24 } : undefined,
                 lineHeight: 1.3,
-                mb: 1,
+                mb: isPlain ? 1.2 : 1,
                 overflowWrap: "anywhere"
               }}
             >
               {label}
             </Typography>
-            <Typography variant="h3" sx={{ fontSize: { xs: 40, md: 44 }, lineHeight: 1, fontWeight: 900, color: "#0f172a" }}>
+            <Typography variant="h3" sx={{ fontSize: { xs: 42, md: 50 }, lineHeight: 1, fontWeight: 900, color: isPlain ? "#111" : "#0f172a" }}>
               {value}
             </Typography>
           </Box>
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flex: "0 0 auto",
-              width: 70,
-              "& svg": {
-                fontSize: 64,
-                color,
-                opacity: 0.9
-              }
-            }}
-          >
-            {icon}
-          </Box>
+          {!isPlain && icon && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flex: "0 0 auto",
+                width: 70,
+                "& svg": {
+                  fontSize: 64,
+                  color,
+                  opacity: 0.9
+                }
+              }}
+            >
+              {icon}
+            </Box>
+          )}
         </Stack>
       </CardContent>
     </Card>
