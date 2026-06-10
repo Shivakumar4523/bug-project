@@ -7,10 +7,12 @@ interface StatCardProps {
   icon?: ReactElement<SvgIconProps>;
   color?: string;
   variant?: "default" | "plain";
+  size?: "normal" | "compact";
 }
 
-export function StatCard({ label, value, icon, color = "#525252", variant = "default" }: StatCardProps) {
+export function StatCard({ label, value, icon, color = "#525252", variant = "default", size = "normal" }: StatCardProps) {
   const isPlain = variant === "plain";
+  const isCompact = size === "compact";
 
   return (
     <Card
@@ -18,7 +20,7 @@ export function StatCard({ label, value, icon, color = "#525252", variant = "def
         position: "relative",
         overflow: "hidden",
         height: "100%",
-        minHeight: 160,
+        minHeight: isCompact ? 132 : 160,
         borderRadius: "8px",
         boxShadow: "0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.1)",
         border: "1px solid",
@@ -35,7 +37,7 @@ export function StatCard({ label, value, icon, color = "#525252", variant = "def
         }
       }}
     >
-      <CardContent sx={{ height: "100%", py: "28px !important", px: 3 }}>
+      <CardContent sx={{ height: "100%", py: `${isCompact ? 22 : 28}px !important`, px: isCompact ? 2.5 : 3 }}>
         <Stack
           direction="row"
           justifyContent={isPlain ? "flex-start" : "space-between"}
@@ -49,15 +51,23 @@ export function StatCard({ label, value, icon, color = "#525252", variant = "def
               sx={{
                 color: isPlain ? "#3f3f46" : "#26364a",
                 fontWeight: isPlain ? 400 : 600,
-                fontSize: isPlain ? { xs: 22, md: 24 } : undefined,
+                fontSize: isPlain ? { xs: isCompact ? 20 : 22, md: isCompact ? 22 : 24 } : undefined,
                 lineHeight: 1.3,
-                mb: isPlain ? 1.2 : 1,
+                mb: isPlain ? (isCompact ? 0.9 : 1.2) : 1,
                 overflowWrap: "anywhere"
               }}
             >
               {label}
             </Typography>
-            <Typography variant="h3" sx={{ fontSize: { xs: 42, md: 50 }, lineHeight: 1, fontWeight: 900, color: isPlain ? "#111" : "#0f172a" }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontSize: { xs: isCompact ? 36 : 42, md: isCompact ? 42 : 50 },
+                lineHeight: 1,
+                fontWeight: 900,
+                color: isPlain ? "#111" : "#0f172a"
+              }}
+            >
               {value}
             </Typography>
           </Box>

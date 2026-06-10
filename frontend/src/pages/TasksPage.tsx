@@ -27,10 +27,6 @@ import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import ForumIcon from "@mui/icons-material/Forum";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import HourglassEmptyIcon from "@mui/icons-material/HourglassEmpty";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useState } from "react";
 import { api, crud, currentUser } from "../api/client";
 import { DataState } from "../components/DataState";
@@ -135,10 +131,10 @@ export function TasksPage() {
     .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
     .slice(0, 5);
   const taskCards = [
-    { label: "Total Tasks", value: totalTasks, icon: <AssignmentIcon />, color: "#0f62fe" },
-    { label: "Open Tasks", value: openTasks, icon: <ErrorOutlineIcon />, color: "#da1e28" },
-    { label: "In Progress", value: inProgressTasks, icon: <HourglassEmptyIcon />, color: "#ff832b" },
-    { label: "Completed Tasks", value: completedTasks, icon: <TaskAltIcon />, color: "#24a148" }
+    { label: "Total Tasks", value: totalTasks },
+    { label: "Open Tasks", value: openTasks },
+    { label: "In Progress", value: inProgressTasks },
+    { label: "Completed Tasks", value: completedTasks }
   ];
   const taskStatusData = ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "CLOSED"]
     .map((status) => ({ name: issueStatusLabel(status, me?.role), value: allTasks.filter((task) => task.status === status).length }))
@@ -162,7 +158,7 @@ export function TasksPage() {
       <Grid container spacing={3} sx={{ mb: 3 }}>
         {taskCards.map((card) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.label}>
-            <StatCard {...card} />
+            <StatCard {...card} variant="plain" size="compact" />
           </Grid>
         ))}
         <Grid size={{ xs: 12, md: 7 }}>
