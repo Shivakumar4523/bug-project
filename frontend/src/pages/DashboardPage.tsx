@@ -48,7 +48,7 @@ export function DashboardPage() {
       <Grid container spacing={3}>
         {cards.map((card) => (
           <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.label}>
-            <StatCard {...card} variant="plain" />
+            <StatCard {...card} variant="plain" size="compact" />
           </Grid>
         ))}
         <Grid size={{ xs: 12, md: 7 }}>
