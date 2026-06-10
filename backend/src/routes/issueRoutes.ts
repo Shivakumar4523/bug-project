@@ -10,7 +10,7 @@ issueRoutes.get("/:id", issueController.get);
 issueRoutes.post("/", authorize("Admin", "Tester"), issueController.create);
 issueRoutes.put("/:id", issueController.update);
 issueRoutes.delete("/:id", authorize("Admin"), issueController.remove);
-issueRoutes.post("/:id/uploads", upload.array("files", 5), issueController.upload);
+issueRoutes.post("/:id/uploads", upload.array("files", 6), issueController.upload);
 issueRoutes.post("/:id/watch", issueController.watch);
 issueRoutes.delete("/:id/watch", issueController.unwatch);
 issueRoutes.get("/:id/comments", issueController.comments);

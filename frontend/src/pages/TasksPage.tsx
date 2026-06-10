@@ -22,6 +22,7 @@ import {
   MenuItem,
   Typography
 } from "@mui/material";
+import { Bar, BarChart, Cell, Pie, PieChart, ResponsiveContainer, Tooltip as ChartTooltip, XAxis, YAxis } from "recharts";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -46,10 +47,20 @@ const wrappingCellSx = {
   whiteSpace: "normal",
   verticalAlign: "top"
 };
+const colors = ["#0f62fe", "#da1e28", "#ff832b", "#24a148", "#525252"];
+const openTaskStatuses = new Set(["OPEN", "BUG_BUCKET", "ASSIGNED"]);
+const completedTaskStatuses = new Set(["FIXED", "READY_FOR_TESTING", "CLOSED"]);
+const dashboardPanelSx = {
+  height: "100%",
+  borderRadius: "8px",
+  border: "1px solid",
+  borderColor: "divider",
+  boxShadow: "0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.1)"
+};
 
-function uploadTaskScreenshots(issueId: string, screenshots: File[]) {
+function uploadTaskAttachments(issueId: string, attachments: File[]) {
   const form = new FormData();
-  screenshots.forEach((file) => form.append("files", file));
+  attachments.forEach((file) => form.append("files", file));
   return api<Issue>(`/issues/${issueId}/uploads`, { method: "POST", body: form });
 }
 
@@ -67,11 +78,11 @@ export function TasksPage() {
   const users = useQuery({ queryKey: ["users"], queryFn: () => crud.list<User>("users") });
 
   const create = useMutation({
-    mutationFn: async ({ data, screenshots }: { data: any; screenshots: File[] }) => {
+    mutationFn: async ({ data, attachments }: { data: any; attachments: File[] }) => {
       // Force type to Task for this page
       const taskData = { ...data, type: "Task" };
       const issue = await crud.create<Issue>("issues", taskData);
-      return screenshots.length ? uploadTaskScreenshots(issue._id, screenshots) : issue;
+      return attachments.length ? uploadTaskAttachments(issue._id, attachments) : issue;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["issues"] });
@@ -81,9 +92,9 @@ export function TasksPage() {
   });
 
   const update = useMutation({
-    mutationFn: async ({ id, data, screenshots }: { id: string; data: unknown; screenshots: File[] }) => {
+    mutationFn: async ({ id, data, attachments }: { id: string; data: unknown; attachments: File[] }) => {
       const issue = await crud.update<Issue>("issues", id, data);
-      return screenshots.length ? uploadTaskScreenshots(id, screenshots) : issue;
+      return attachments.length ? uploadTaskAttachments(id, attachments) : issue;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["issues"] });
@@ -112,37 +123,164 @@ export function TasksPage() {
     return matchesSearch && matchesProject;
   });
 
-  // Calculate Stats
   const totalTasks = allTasks.length;
-  const openTasks = allTasks.filter(t => ["OPEN", "BUG_BUCKET", "ASSIGNED"].includes(t.status)).length;
-  const inProgressTasks = allTasks.filter(t => t.status === "IN_PROGRESS").length;
-  const completedTasks = allTasks.filter(t => ["FIXED", "READY_FOR_TESTING", "CLOSED"].includes(t.status)).length;
+  const openTasks = allTasks.filter((task) => openTaskStatuses.has(task.status)).length;
+  const inProgressTasks = allTasks.filter((task) => task.status === "IN_PROGRESS").length;
+  const completedTasks = allTasks.filter((task) => completedTaskStatuses.has(task.status)).length;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const overdueTasks = allTasks.filter((task) => task.dueDate && new Date(task.dueDate) < today && !completedTaskStatuses.has(task.status)).length;
+  const upcomingTasks = allTasks
+    .filter((task) => task.dueDate && !completedTaskStatuses.has(task.status))
+    .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime())
+    .slice(0, 5);
+  const taskCards = [
+    { label: "Total Tasks", value: totalTasks, icon: <AssignmentIcon />, color: "#0f62fe" },
+    { label: "Open Tasks", value: openTasks, icon: <ErrorOutlineIcon />, color: "#da1e28" },
+    { label: "In Progress", value: inProgressTasks, icon: <HourglassEmptyIcon />, color: "#ff832b" },
+    { label: "Completed Tasks", value: completedTasks, icon: <TaskAltIcon />, color: "#24a148" }
+  ];
+  const taskStatusData = ["OPEN", "BUG_BUCKET", "ASSIGNED", "IN_PROGRESS", "FIXED", "READY_FOR_TESTING", "CLOSED"]
+    .map((status) => ({ name: issueStatusLabel(status, me?.role), value: allTasks.filter((task) => task.status === status).length }))
+    .filter((item) => item.value > 0);
+  const taskPriorityData = ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    .map((priority) => ({ name: priority, value: allTasks.filter((task) => task.priority === priority).length }))
+    .filter((item) => item.value > 0);
+  const taskProjectData = projects.data!
+    .map((project) => ({ name: project.key || project.name, value: allTasks.filter((task) => task.project?._id === project._id).length }))
+    .filter((item) => item.value > 0)
+    .slice(0, 6);
 
   return (
     <>
       <PageHeader 
-        title="Admin Tasks Management" 
+        title="Task Management Dashboard" 
         action="Create Task" 
         onAction={() => setCreateOpen(true)} 
       />
 
-      {/* Stats Cards Section */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard label="Total Tasks" value={totalTasks} icon={<AssignmentIcon />} color="#0f62fe" />
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        {taskCards.map((card) => (
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={card.label}>
+            <StatCard {...card} />
+          </Grid>
+        ))}
+        <Grid size={{ xs: 12, md: 7 }}>
+          <Card sx={dashboardPanelSx}>
+            <CardContent>
+              <Typography variant="h6">Tasks by Status</Typography>
+              <Box sx={{ height: 260 }}>
+                {taskStatusData.length ? (
+                  <ResponsiveContainer>
+                    <BarChart data={taskStatusData}>
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <ChartTooltip />
+                      <Bar dataKey="value" fill="#0f62fe" radius={[5, 5, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Stack sx={{ height: "100%" }} alignItems="center" justifyContent="center">
+                    <Typography color="text.secondary">No tasks yet.</Typography>
+                  </Stack>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard label="Open Tasks" value={openTasks} icon={<ErrorOutlineIcon />} color="#da1e28" />
+        <Grid size={{ xs: 12, md: 5 }}>
+          <Card sx={dashboardPanelSx}>
+            <CardContent>
+              <Typography variant="h6">Tasks by Priority</Typography>
+              <Box sx={{ height: 260 }}>
+                {taskPriorityData.length ? (
+                  <ResponsiveContainer>
+                    <PieChart>
+                      <Pie data={taskPriorityData} dataKey="value" nameKey="name" innerRadius={58} outerRadius={92} label>
+                        {taskPriorityData.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+                      </Pie>
+                      <ChartTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Stack sx={{ height: "100%" }} alignItems="center" justifyContent="center">
+                    <Typography color="text.secondary">No priority data.</Typography>
+                  </Stack>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard label="In Progress" value={inProgressTasks} icon={<HourglassEmptyIcon />} color="#ff832b" />
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card sx={dashboardPanelSx}>
+            <CardContent>
+              <Typography variant="h6">Tasks by Project</Typography>
+              <Box sx={{ height: 250 }}>
+                {taskProjectData.length ? (
+                  <ResponsiveContainer>
+                    <BarChart data={taskProjectData}>
+                      <XAxis dataKey="name" />
+                      <YAxis allowDecimals={false} />
+                      <ChartTooltip />
+                      <Bar dataKey="value" fill="#24a148" radius={[5, 5, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Stack sx={{ height: "100%" }} alignItems="center" justifyContent="center">
+                    <Typography color="text.secondary">No project data.</Typography>
+                  </Stack>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-          <StatCard label="Completed Tasks" value={completedTasks} icon={<TaskAltIcon />} color="#24a148" />
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Card sx={dashboardPanelSx}>
+            <CardContent>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2} sx={{ mb: 1 }}>
+                <Typography variant="h6">Upcoming Deadlines</Typography>
+                <Chip size="small" color={overdueTasks ? "error" : "default"} label={`${overdueTasks} overdue`} />
+              </Stack>
+              <Box sx={{ minHeight: 250 }}>
+                {upcomingTasks.length ? (
+                  <Stack>
+                    {upcomingTasks.map((task, index) => (
+                      <Box
+                        key={task._id}
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 2,
+                          py: 1.25,
+                          borderBottom: index === upcomingTasks.length - 1 ? "none" : "1px solid",
+                          borderColor: "divider"
+                        }}
+                      >
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography sx={{ fontWeight: 800, overflowWrap: "anywhere" }}>{task.title}</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {task.issueNumber} - {task.project?.name ?? "No project"}
+                          </Typography>
+                        </Box>
+                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ xs: "flex-end", sm: "center" }}>
+                          <Chip size="small" label={task.priority} variant="outlined" />
+                          <Chip size="small" label={new Date(task.dueDate!).toLocaleDateString()} />
+                        </Stack>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Stack sx={{ minHeight: 210 }} alignItems="center" justifyContent="center">
+                    <Typography color="text.secondary">No upcoming tasks.</Typography>
+                  </Stack>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
-      {/* Filter and Search Bar */}
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ mb: 3 }} alignItems="center">
         <TextField
           size="small"
@@ -166,8 +304,7 @@ export function TasksPage() {
         </TextField>
       </Stack>
 
-      {/* Tasks Table */}
-      <TableContainer sx={{ maxWidth: "100%", overflowX: "auto", pb: 1, bgcolor: "background.paper", borderRadius: 2, boxShadow: 1 }}>
+      <TableContainer sx={{ maxWidth: "100%", overflowX: "auto", pb: 1, bgcolor: "background.paper", borderRadius: "8px", border: "1px solid", borderColor: "divider", boxShadow: "0 1px 3px 0 rgb(15 23 42 / 0.1), 0 1px 2px -1px rgb(15 23 42 / 0.1)" }}>
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -204,7 +341,7 @@ export function TasksPage() {
                     {task.modulePage ? (
                       <Chip label={task.modulePage} size="small" variant="outlined" color="secondary" />
                     ) : (
-                      "—"
+                      "-"
                     )}
                   </TableCell>
                   <TableCell sx={wrappingCellSx}>
@@ -212,7 +349,7 @@ export function TasksPage() {
                   </TableCell>
                   <TableCell sx={wrappingCellSx}>{task.assignee?.name ?? "Unassigned"}</TableCell>
                   <TableCell sx={wrappingCellSx}>
-                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "—"}
+                    {task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-"}
                   </TableCell>
                   <TableCell sx={{ whiteSpace: "nowrap" }}>
                     <Stack direction="row" spacing={0.5}>
@@ -247,7 +384,7 @@ export function TasksPage() {
           <TaskForm
             projects={projects.data!}
             users={users.data!}
-            onSubmit={(data, screenshots) => create.mutate({ data, screenshots })}
+            onSubmit={(data, attachments) => create.mutate({ data, attachments })}
           />
         </DialogContent>
       </Dialog>
@@ -260,7 +397,7 @@ export function TasksPage() {
               projects={projects.data!}
               users={users.data!}
               initial={editing}
-              onSubmit={(data, screenshots) => update.mutate({ id: editing._id, data, screenshots })}
+              onSubmit={(data, attachments) => update.mutate({ id: editing._id, data, attachments })}
             />
           )}
         </DialogContent>

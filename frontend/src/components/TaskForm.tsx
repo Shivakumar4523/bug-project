@@ -12,7 +12,10 @@ import {
 } from "@mui/material";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import DownloadIcon from "@mui/icons-material/Download";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 import type { Issue, IssueCategory, IssueStatus, Project, ModulePage, User } from "../types";
+import { downloadXlsx } from "../utils/xlsx";
 
 const taskPriorities = ["LOW", "MEDIUM", "HIGH", "CRITICAL"] as const;
 
@@ -50,6 +53,12 @@ const priorityColors: Record<string, string> = {
   CRITICAL: "#da1e28"
 };
 
+const taskAssignmentTemplate = [
+  ["Task Title", "Task Requirements", "Module / Page", "Category", "Project", "Priority", "Suggested Developer Email", "Status", "Due Date"],
+  ["Fix dashboard card alignment", "Make all stat containers equal height and match dashboard colors.", "Dashboard", "UI Bug", "PIRNAV", "HIGH", "developer@pirnav.com", "OPEN", "2026-06-30"],
+  ["Prepare task status report", "Create a summary of pending and completed task assignments.", "Reports", "Enhancement Request", "PIRNAV", "MEDIUM", "", "ASSIGNED", "2026-07-05"]
+] as const;
+
 type FormValues = {
   type: string;
   title: string;
@@ -72,9 +81,10 @@ export function TaskForm({
   projects: Project[];
   users: User[];
   initial?: Partial<Issue>;
-  onSubmit: (data: unknown, screenshots: File[]) => void;
+  onSubmit: (data: unknown, attachments: File[]) => void;
 }) {
   const [screenshots, setScreenshots] = useState<File[]>([]);
+  const [taskSheet, setTaskSheet] = useState<File | null>(null);
 
   const { register, handleSubmit, control, formState: { errors } } =
     useForm<FormValues>({
@@ -114,7 +124,11 @@ export function TaskForm({
       dueDate: data.dueDate || undefined
     };
 
-    onSubmit(payload, screenshots);
+    onSubmit(payload, taskSheet ? [...screenshots, taskSheet] : screenshots);
+  };
+
+  const downloadReferenceExcel = () => {
+    downloadXlsx("pirnav-task-assignment-reference.xlsx", "Task Assignment", taskAssignmentTemplate);
   };
 
   return (
@@ -249,6 +263,29 @@ export function TaskForm({
             {screenshots.length
               ? `${screenshots.length} files selected`
               : "Max 5 screenshots"}
+          </Typography>
+        </Stack>
+
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ xs: "stretch", sm: "center" }}>
+          <Button startIcon={<DownloadIcon />} variant="outlined" onClick={downloadReferenceExcel}>
+            Reference Excel
+          </Button>
+
+          <Button component="label" startIcon={<UploadFileIcon />} variant="outlined">
+            Attach Task Excel
+            <input
+              hidden
+              type="file"
+              accept=".xlsx"
+              onChange={(e) => {
+                setTaskSheet(e.target.files?.[0] ?? null);
+                e.target.value = "";
+              }}
+            />
+          </Button>
+
+          <Typography variant="caption" color="text.secondary">
+            {taskSheet?.name ?? "Optional for task assigning"}
           </Typography>
         </Stack>
 

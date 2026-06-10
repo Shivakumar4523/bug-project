@@ -1,7 +1,7 @@
 import path from "node:path";
 import multer from "multer";
 import { AppError } from "./errorHandler.js";
-const allowed = new Set([".png", ".jpg", ".jpeg", ".pdf", ".docx", ".zip"]);
+const allowed = new Set([".png", ".jpg", ".jpeg", ".pdf", ".docx", ".zip", ".xlsx"]);
 const excelAllowed = new Set([".xlsx"]);
 const storage = multer.diskStorage({
     destination: "uploads",
