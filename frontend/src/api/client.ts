@@ -9,50 +9,39 @@ type RefreshResponse = {
 let refreshRequest: Promise<string | null> | null = null;
 
 export function getToken() {
-  return sessionStorage.getItem("accessToken") ?? localStorage.getItem("accessToken");
+  return sessionStorage.getItem("accessToken");
 }
 
 export function getRefreshToken() {
-  return sessionStorage.getItem("refreshToken") ?? localStorage.getItem("refreshToken");
+  return sessionStorage.getItem("refreshToken");
 }
 
-export function setSession(accessToken: string, refreshToken: string, user: unknown, remember = true) {
+export function setSession(accessToken: string, refreshToken: string, user: unknown) {
   clearSession();
-  const storage = remember ? localStorage : sessionStorage;
-  storage.setItem("accessToken", accessToken);
-  storage.setItem("refreshToken", refreshToken);
-  storage.setItem("user", JSON.stringify(user));
+  sessionStorage.setItem("accessToken", accessToken);
+  sessionStorage.setItem("refreshToken", refreshToken);
+  sessionStorage.setItem("user", JSON.stringify(user));
 }
 
 export function clearSession() {
   for (const key of sessionKeys) {
-    localStorage.removeItem(key);
     sessionStorage.removeItem(key);
+    localStorage.removeItem(key);
   }
 }
 
 export function currentUser<T>() {
-  const raw = sessionStorage.getItem("user") ?? localStorage.getItem("user");
+  const raw = sessionStorage.getItem("user");
   return raw ? (JSON.parse(raw) as T) : null;
 }
 
 export function setCurrentUser(user: unknown) {
-  const raw = JSON.stringify(user);
-  if (sessionStorage.getItem("accessToken")) sessionStorage.setItem("user", raw);
-  if (localStorage.getItem("accessToken")) localStorage.setItem("user", raw);
-}
-
-function getSessionStorage() {
-  if (sessionStorage.getItem("refreshToken") || sessionStorage.getItem("accessToken")) return sessionStorage;
-  if (localStorage.getItem("refreshToken") || localStorage.getItem("accessToken")) return localStorage;
-  return localStorage;
+  if (sessionStorage.getItem("accessToken")) sessionStorage.setItem("user", JSON.stringify(user));
 }
 
 function setAccessToken(accessToken: string) {
-  const storage = getSessionStorage();
-  storage.setItem("accessToken", accessToken);
-  const otherStorage = storage === localStorage ? sessionStorage : localStorage;
-  otherStorage.removeItem("accessToken");
+  sessionStorage.setItem("accessToken", accessToken);
+  localStorage.removeItem("accessToken");
 }
 
 function notifySessionExpired() {

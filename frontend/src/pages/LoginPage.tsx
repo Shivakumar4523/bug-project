@@ -123,7 +123,7 @@ export function LoginPage() {
           try {
             const { rememberMe, ...credentials } = data;
             const res = await api<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify(credentials) });
-            setSession(res.accessToken, res.refreshToken, res.user, rememberMe);
+            setSession(res.accessToken, res.refreshToken, res.user);
             if (rememberMe) localStorage.setItem("rememberedEmail", credentials.email);
             else localStorage.removeItem("rememberedEmail");
             navigate("/");
